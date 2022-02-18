@@ -3,11 +3,12 @@ const enum Types {
     Array = 'a',
     Map = 'm',
     Set = 's',
-    Date = 'd'
+    Date = 'd',
+    RegExp = 'r'
 }
 
 export const identity = (x: any) => {
-    if (typeof x !== 'object') return x;
+    if (typeof x !== 'object' || x === null || x === undefined) return x;
 
     const str = Object.prototype.toString.call(x);
     let out = '';
@@ -39,6 +40,11 @@ export const identity = (x: any) => {
         case '[object Date]': {
             out += Types.Date;
             out += +x;
+            break;
+        }
+        case '[object RegExp]': {
+            out += Types.RegExp;
+            out += str.source + str.flags;
             break;
         }
         default:

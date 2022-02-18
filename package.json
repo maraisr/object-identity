@@ -2,7 +2,7 @@
     "name": "object-identity",
     "version": "0.0.1",
     "scripts": {
-        "test": "uvu test -r tsm -i suites \".spec.ts$\""
+        "test": "uvu test -r tsm     \".spec.ts$\""
     },
     "main": "index.js",
     "module": "index.mjs",
