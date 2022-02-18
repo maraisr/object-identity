@@ -1,0 +1,16 @@
+{
+    "name": "object-identity",
+    "version": "0.0.1",
+    "scripts": {
+        "test": "uvu test -r tsm -i suites \".spec.ts$\""
+    },
+    "main": "index.js",
+    "module": "index.mjs",
+    "devDependencies": {
+        "tsm": "^2.1.2",
+        "uvu": "^0.5.2"
+    },
+    "dependencies": {
+        "@types/node": "^17.0.18"
+    }
+}
