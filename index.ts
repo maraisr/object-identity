@@ -1,9 +1,9 @@
 const enum Types {
-    Object,
-    Array,
-    Map,
-    Set,
-    Date
+    Object = 'o',
+    Array = 'a',
+    Map = 'm',
+    Set = 's',
+    Date = 'd'
 }
 
 export const identity = (x: any) => {
@@ -41,6 +41,8 @@ export const identity = (x: any) => {
             out += +x;
             break;
         }
+        default:
+            throw new Error(`Unsupported type ${str}`);
     }
 
     return out;
