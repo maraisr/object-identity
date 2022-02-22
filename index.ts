@@ -1,4 +1,4 @@
-const walk = (input: any, seen: Set<any>) => {
+function walk(input: any, seen: WeakSet<any>) {
 	if (input == null || typeof input !== 'object') return input;
 	if (seen.has(input)) return '{CIRCULAR}';
 	seen.add(input);
@@ -15,7 +15,6 @@ const walk = (input: any, seen: Set<any>) => {
 
 		case '[object Object]': {
 			out += 'o';
-
 			keys = Object.keys(input).sort();
 			for (i = 0; i < keys.length; i++) {
 				tmp = keys[i];
@@ -26,11 +25,8 @@ const walk = (input: any, seen: Set<any>) => {
 
 		case '[object Map]': {
 			out += 'o';
-
 			keys = Array.from((input as Map<string, unknown>).keys()).sort();
-
 			for (tmp of keys) out += tmp + walk(input.get(tmp), seen);
-
 			return out;
 		}
 
@@ -43,10 +39,10 @@ const walk = (input: any, seen: Set<any>) => {
 		default:
 			throw new Error(`Unsupported value ${input}`);
 	}
-};
+}
 
 export type Hasher = (input: string) => Promise<string> | string;
 
 export function identify<T, H extends Hasher = Hasher>(input: T, hasher: H) {
-	return hasher(walk(input, new Set));
+	return hasher(walk(input, new WeakSet));
 }
