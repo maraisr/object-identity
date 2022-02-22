@@ -1,0 +1,12 @@
+{
+	"extends": "@marais/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"target": "esnext",
+		"removeComments": false,
+		"lib": ["ESNext"]
+	},
+	"include": ["*.ts"],
+	"exclude": ["node_modules"]
+}

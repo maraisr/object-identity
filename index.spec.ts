@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { identify as _identify } from '.';
 
-const identify = (x) => _identify(x, v => v);
+const identify = (x: any) => _identify(x, v => v);
 
 // ~ API
 
@@ -78,6 +78,7 @@ Objects('nested', () => {
 
 Objects('circular', () => {
 	const o = { a: 'b' };
+	// @ts-ignore
 	o['c'] = o;
 	assert.not.throws(() => identify(o), /Maximum call stack size exceeded/);
 	assert.equal(identify(o), identify(o));
@@ -150,7 +151,7 @@ Maps.run();
 const Values = suite('values');
 
 Values('primitives', () => {
-	const t = (v) => assert.equal(identify(v), identify(v), `Value ${v} should have hashed correctly.`);
+	const t = (v: any) => assert.equal(identify(v), identify(v), `Value ${v} should have hashed correctly.`);
 
 	t('test');
 	t(new Date());
