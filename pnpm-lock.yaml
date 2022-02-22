@@ -4,9 +4,11 @@ specifiers:
   '@types/node': ^17.0.18
   tsm: ^2.1.2
   uvu: ^0.5.2
+  worktop: ^0.8.0-next.11
 
 dependencies:
   '@types/node': 17.0.18
+  worktop: 0.8.0-next.11
 
 devDependencies:
   tsm: 2.1.2
@@ -198,6 +200,16 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
+  /mrmime/1.0.0:
+    resolution: {integrity: sha512-a70zx7zFfVO7XpnQ2IX1Myh9yY4UYvfld/dikWRnsXxbyvMcfz+u6UfgNAtH+k2QqtJuzVpv6eLTx1G2+WKZbQ==}
+    engines: {node: '>=10'}
+    dev: false
+
+  /regexparam/2.0.0:
+    resolution: {integrity: sha512-gJKwd2MVPWHAIFLsaYDZfyKzHNS4o7E/v8YmNf44vmeV2e4YfVoDToTOKTvE7ab68cRJ++kLuEXJBaEeJVt5ow==}
+    engines: {node: '>=8'}
+    dev: false
+
   /sade/1.7.4:
     resolution: {integrity: sha512-y5yauMD93rX840MwUJr7C1ysLFBgMspsdTo4UVrDg3fXDvtwOyIqykhVAAm6fk/3au77773itJStObgK+LKaiA==}
     engines: {node: '>= 6'}
@@ -229,3 +241,11 @@ packages:
       sade: 1.7.4
       totalist: 2.0.0
     dev: true
+
+  /worktop/0.8.0-next.11:
+    resolution: {integrity: sha512-e37dFOZD+sWlnXV7L5SJyfK8N7iy3WzS1wo5N+eEYiJNYADQ81EEB/zropBap4K+G2z83W/orTrCMa/jWd0pWw==}
+    engines: {node: '>=12'}
+    dependencies:
+      mrmime: 1.0.0
+      regexparam: 2.0.0
+    dev: false

@@ -1,55 +1,52 @@
-const enum Types {
-    Object = 'o',
-    Array = 'a',
-    Map = 'm',
-    Set = 's',
-    Date = 'd',
-    RegExp = 'r'
-}
+const walk = (input: any, seen: Set<any>) => {
+	if (input == null || typeof input !== 'object') return input;
+	if (seen.has(input)) return '{CIRCULAR}';
+	seen.add(input);
 
-export const identity = (x: any) => {
-    if (typeof x !== 'object' || x === null || x === undefined) return x;
+	let out = '', i = 0, tmp: unknown, keys: string[];
 
-    const str = Object.prototype.toString.call(x);
-    let out = '';
+	switch (Object.prototype.toString.call(input)) {
+		case '[object Set]':
+		case '[object Array]': {
+			out += 'a';
+			for (tmp of input) out += walk(tmp, seen);
+			return out;
+		}
 
-    switch (str) {
-        case '[object Object]': {
-            out += Types.Object;
-            Object.keys(x).sort().forEach(key => {
-                out += key;
-                out += identity(key) + identity(x[key]);
-            });
-            break;
-        }
-        case '[object Array]': {
-            out += Types.Array;
-            out += String(x.map(identity).sort());
-            break;
-        }
-        case '[object Set]': {
-            out += Types.Set;
-            out += String(Array.from(x).map(identity).sort());
-            break;
-        }
-        case '[object Map]': {
-            out += Types.Object;
-            out += identity(Object.fromEntries(x.entries()));
-            break;
-        }
-        case '[object Date]': {
-            out += Types.Date;
-            out += +x;
-            break;
-        }
-        case '[object RegExp]': {
-            out += Types.RegExp;
-            out += str.source + str.flags;
-            break;
-        }
-        default:
-            throw new Error(`Unsupported type ${str}`);
-    }
+		case '[object Object]': {
+			out += 'o';
 
-    return out;
+			keys = Object.keys(input).sort();
+			for (i = 0; i < keys.length; i++) {
+				tmp = keys[i];
+				out += tmp + walk(input[tmp as string], seen);
+			}
+			return out;
+		}
+
+		case '[object Map]': {
+			out += 'o';
+
+			keys = Array.from((input as Map<string, unknown>).keys()).sort();
+
+			for (tmp of keys) out += tmp + walk(input.get(tmp), seen);
+
+			return out;
+		}
+
+		case '[object Date]':
+			return out + 'd' + +input;
+
+		case '[object RegExp]':
+			return out + 'r' + input.source + input.flags;
+
+		default:
+			throw new Error(`Unsupported value ${input}`);
+	}
 };
+
+export type Hasher = (input: string) => Promise<string> | string;
+
+export function identify<T, H extends Hasher = Hasher>(input: T, hasher: H) {
+	return hasher(walk(input, new Set));
+}

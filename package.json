@@ -1,16 +1,18 @@
 {
-    "name": "object-identity",
-    "version": "0.0.1",
-    "scripts": {
-        "test": "uvu test -r tsm     \".spec.ts$\""
-    },
-    "main": "index.js",
-    "module": "index.mjs",
-    "devDependencies": {
-        "tsm": "^2.1.2",
-        "uvu": "^0.5.2"
-    },
-    "dependencies": {
-        "@types/node": "^17.0.18"
-    }
+	"name": "object-identity",
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"test": "uvu . -r tsm  \".spec.ts$\""
+	},
+	"main": "index.js",
+	"module": "index.mjs",
+	"devDependencies": {
+		"tsm": "^2.1.2",
+		"uvu": "^0.5.2"
+	},
+	"dependencies": {
+		"@types/node": "^17.0.18",
+		"worktop": "^0.8.0-next.11"
+	}
 }
