@@ -167,4 +167,12 @@ Values('primitives', () => {
 	// t(Symbol("test"));
 });
 
+Values('all elements visited', () => {
+	const c = [1];
+	// @ts-ignore
+	c.push(c);
+	const hash = identify({ a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] } });
+	assert.equal(hash, 'oaobacadoefa1{CIRCULAR}g');
+});
+
 Values.run();
