@@ -11,3 +11,7 @@ node_modules
 *.iml
 /.idea
 /.vscode
+
+/index.js
+/index.mjs
+/index.d.ts
