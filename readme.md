@@ -29,7 +29,7 @@
 
 - 🌪 **Recursive/Circular support**
 
-- 🏎 **Performant** — _TBD benchmarks_
+- 🏎 **Performant** — check the [benchmarks](#-benchmark).
 
 - 🪶 **Lightweight** — a mere 503B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
@@ -48,6 +48,23 @@ const hashB = identify({ a: "b" }, hasher);
 
 expect(hashA).toEqual(hashB);
 ```
+
+## 💨 Benchmark
+
+> via the [`/bench`](/bench) directory with Node v17.4.0
+
+```
+benchmark :: hashed
+  object-hash          x  25,773 ops/sec ±2.49% (89 runs sampled)
+  object-identity^     x 270,940 ops/sec ±1.28% (92 runs sampled)
+
+benchmark :: passed through
+  object-hash          x  65,894 ops/sec ±0.81% (89 runs sampled)
+  object-identity^     x 775,302 ops/sec ±0.29% (95 runs sampled)
+```
+
+> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function` values and other node builtins.
+> So take this benchmark with a grain of salt, as it's only testing "json-like" payloads.
 
 ## License
 

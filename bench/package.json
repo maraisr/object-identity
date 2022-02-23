@@ -1,0 +1,9 @@
+{
+	"private": true,
+	"dependencies": {
+		"@types/benchmark": "2.1.1",
+		"@types/node": "^17.0.19",
+		"benchmark": "2.1.4",
+		"object-hash": "^3.0.0"
+	}
+}
