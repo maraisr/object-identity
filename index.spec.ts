@@ -175,4 +175,12 @@ Values('all elements visited', () => {
 	assert.equal(hash, 'oaobacadoefa1{CIRCULAR}g');
 });
 
+Values('should only be seen once', () => {
+	const hash = identify({
+		a: [[1], [2], [3]],
+		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
+	});
+	assert.not.match(hash, /{CIRCULAR}/);
+});
+
 Values.run();

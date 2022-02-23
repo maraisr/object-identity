@@ -41,8 +41,8 @@ function walk(input: any, seen: WeakSet<any>) {
 	}
 }
 
-export type Hasher = (input: string) => Promise<string> | string;
+export type Hasher = (input: string) => any;
 
-export function identify<T, H extends Hasher = Hasher>(input: T, hasher: H) {
+export function identify<T, H extends Hasher>(input: T, hasher: H): ReturnType<H> {
 	return hasher(walk(input, new WeakSet));
 }
