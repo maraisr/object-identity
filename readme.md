@@ -42,11 +42,13 @@ import { identify } from 'object-identity';
 // ~> Some user defined hasher
 const hasher = (value) => createHash('sha1').update(value).digest('hex');
 
-// Lets hash the object
-const hashA = identify({ a: "b" }, hasher);
-const hashB = identify({ a: "b" }, hasher);
+// ~> identity the object
+const hashA = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) }, hasher);
+// ~> an entirely different object, but structurally the same
+const hashB = identify({ a: new Set(['b', 'c', new Map([['e', 'e']])]) }, hasher);
 
-expect(hashA).toEqual(hashB);
+// they should equal
+assert.toEqual(hashA, hashB);
 ```
 
 ## 💨 Benchmark
