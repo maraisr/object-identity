@@ -38,6 +38,13 @@ Arrays('circular', () => {
 	assert.equal(identify(arr), identify(arr));
 });
 
+Arrays('circular should know its circular', () => {
+	const arr = [1, 2, 3];
+	// @ts-ignore
+	arr.push(arr);
+	assert.equal(identify(arr), 'a123{C1}');
+});
+
 Arrays.run();
 
 // ~ Objects
@@ -82,6 +89,22 @@ Objects('circular', () => {
 	o['c'] = o;
 	assert.not.throws(() => identify(o), /Maximum call stack size exceeded/);
 	assert.equal(identify(o), identify(o));
+});
+
+Objects('with samey circular shoudlnt match', () => {
+	const o1: any = { a: 1, b: 2 };
+	const o2: any = { a: 1, b: 2 };
+	o1['c'] = o1;
+	o1['d'] = o2;
+	o2['c'] = o2;
+
+	const a = identify(o1);
+	o1['c'] = o1;
+	o1['d'] = o2;
+	o2['c'] = o1; // 👈 circular on first object, different from a which is circular on 2nd object
+	const b = identify(o1);
+
+	assert.not.equal(a, b, `${a} != ${b}`);
 });
 
 Objects('same values between types shouldnt match', () => {
@@ -167,12 +190,36 @@ Values('primitives', () => {
 	// t(Symbol("test"));
 });
 
+Values('circular ref should be consistent', () => {
+	let o: any = { a: 1, c: 2 };
+	o.b = o;
+	o.d = new Map; // the map is seen 2nd
+	o.d.set('x', o.d);
+
+	assert.equal(Object.keys(o), ['a', 'c', 'b', 'd']);
+
+	const a = identify(o);
+
+	o = { a: 1 };
+	o.d = new Map; // the map is seen first
+	o.d.set('x', o.d);
+	o.b = o;
+	o.c = 2;
+
+	assert.equal(Object.keys(o), ['a', 'd', 'b', 'c']);
+
+	const b = identify(o);
+
+	// the circular ref should be the same
+	assert.equal(a, b, `${a} === ${b}`);
+});
+
 Values('all elements visited', () => {
 	const c = [1];
 	// @ts-ignore
 	c.push(c);
 	const hash = identify({ a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] } });
-	assert.equal(hash, 'oaobacadoefa1{CIRCULAR}g');
+	assert.equal(hash, 'oaobacadoefa1{C5}g');
 });
 
 Values('should only be seen once', () => {
@@ -180,7 +227,7 @@ Values('should only be seen once', () => {
 		a: [[1], [2], [3]],
 		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
 	});
-	assert.not.match(hash, /{CIRCULAR}/);
+	assert.not.match(hash, /{C\d+}/);
 });
 
 Values.run();

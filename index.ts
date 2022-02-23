@@ -1,7 +1,7 @@
-function walk(input: any, seen: WeakSet<any>) {
+function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	if (input == null || typeof input !== 'object') return input;
-	if (seen.has(input)) return '{CIRCULAR}';
-	seen.add(input);
+	if (seen.has(input)) return `{C${seen.get(input)}}`;
+	seen.set(input, ++ref_index);
 
 	let out = '', i = 0, tmp: unknown, keys: string[];
 
@@ -9,7 +9,7 @@ function walk(input: any, seen: WeakSet<any>) {
 		case '[object Set]':
 		case '[object Array]': {
 			out += 'a';
-			for (tmp of input) out += walk(tmp, seen);
+			for (tmp of input) out += walk(tmp, seen, ref_index);
 			return out;
 		}
 
@@ -18,7 +18,7 @@ function walk(input: any, seen: WeakSet<any>) {
 			keys = Object.keys(input).sort();
 			for (i = 0; i < keys.length; i++) {
 				tmp = keys[i];
-				out += tmp + walk(input[tmp as string], seen);
+				out += tmp + walk(input[tmp as string], seen, ref_index);
 			}
 			return out;
 		}
@@ -26,7 +26,7 @@ function walk(input: any, seen: WeakSet<any>) {
 		case '[object Map]': {
 			out += 'o';
 			keys = Array.from((input as Map<string, unknown>).keys()).sort();
-			for (tmp of keys) out += tmp + walk(input.get(tmp), seen);
+			for (tmp of keys) out += tmp + walk(input.get(tmp), seen, ref_index);
 			return out;
 		}
 
@@ -44,5 +44,5 @@ function walk(input: any, seen: WeakSet<any>) {
 export type Hasher = (input: string) => any;
 
 export function identify<T, H extends Hasher>(input: T, hasher: H): ReturnType<H> {
-	return hasher(walk(input, new WeakSet));
+	return hasher(walk(input, new WeakMap, 0));
 }
