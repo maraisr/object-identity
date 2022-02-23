@@ -214,6 +214,30 @@ Values('circular ref should be consistent', () => {
 	assert.equal(a, b, `${a} === ${b}`);
 });
 
+Values('circular deeply nested objects should equal', () => {
+	const o1: any = {
+		b: {
+			c: 123,
+		},
+	};
+
+	o1.b.d = o1;
+	o1.x = [9, o1.b];
+
+
+	const o2: any = {
+		b: {
+			c: 123,
+		},
+	};
+
+	o2.b.d = o2;
+	o2.x = [9, o2.b];
+	const a = identify(o1);
+	const b = identify(o2);
+	assert.equal(a, b, `${a} === ${b}`);
+});
+
 Values('all elements visited', () => {
 	const c = [1];
 	// @ts-ignore
