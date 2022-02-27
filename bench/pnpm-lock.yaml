@@ -2,13 +2,13 @@ lockfileVersion: 5.3
 
 specifiers:
   '@types/benchmark': 2.1.1
-  '@types/node': ^17.0.19
+  '@types/node': ^17.0.21
   benchmark: 2.1.4
   object-hash: ^3.0.0
 
 dependencies:
   '@types/benchmark': 2.1.1
-  '@types/node': 17.0.19
+  '@types/node': 17.0.21
   benchmark: 2.1.4
   object-hash: 3.0.0
 
@@ -18,8 +18,8 @@ packages:
     resolution: {integrity: sha512-XmdNOarpSSxnb3DE2rRFOFsEyoqXLUL+7H8nSGS25vs+JS0018bd+cW5Ma9vdlkPmoTHSQ6e8EUFMFMxeE4l+g==}
     dev: false
 
-  /@types/node/17.0.19:
-    resolution: {integrity: sha512-PfeQhvcMR4cPFVuYfBN4ifG7p9c+Dlh3yUZR6k+5yQK7wX3gDgVxBly4/WkBRs9x4dmcy1TVl08SY67wwtEvmA==}
+  /@types/node/17.0.21:
+    resolution: {integrity: sha512-DBZCJbhII3r90XbQxI8Y9IjjiiOGlZ0Hr32omXIZvwwZ7p4DMMXGrKXVyPfuoBOri9XNtL0UK69jYIBIsRX3QQ==}
     dev: false
 
   /benchmark/2.1.4:
