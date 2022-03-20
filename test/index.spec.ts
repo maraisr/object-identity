@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { identify as _identify } from '.';
+import { identify as _identify } from '../src';
 
 const identify = (x: any) => _identify(x, v => v);
 
