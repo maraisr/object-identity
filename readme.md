@@ -31,7 +31,7 @@
 -	✅ **Intuitive**
 -	🌪 **Recursive/Circular support**
 -	🏎 **Performant** — check the [benchmarks](#-benchmark).
--	🪶 **Lightweight** — a mere 503B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
+-	🪶 **Lightweight** — a mere 387B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## 🚀 Usage
 

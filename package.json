@@ -18,7 +18,7 @@
 	],
 	"scripts": {
 		"bench": "node -r tsm bench/index.ts",
-		"build": "bundt",
+		"build": "bundt --minify",
 		"test": "uvu test -r tsm \".spec.ts$\"",
 		"typecheck": "tsc --noEmit"
 	},
