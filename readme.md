@@ -1,9 +1,12 @@
 <div align="right">
-<h1><code>object-identity</code></h1>
+
+# `object-identity`
+
 <br />
 <br />
 
-<p><code>npm add object-identity</code> hashes objects</p>
+`npm add object-identity` hashes objects
+
 <span>
 <a href="https://github.com/maraisr/object-identity/actions/workflows/ci.yml">
 	<img src="https://github.com/maraisr/object-identity/actions/workflows/ci.yml/badge.svg"/>
@@ -26,11 +29,8 @@
 ## ⚡ Features
 
 - ✅ **Intuitive**
-
 - 🌪 **Recursive/Circular support**
-
 - 🏎 **Performant** — check the [benchmarks](#-benchmark).
-
 - 🪶 **Lightweight** — a mere 503B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## 🚀 Usage
