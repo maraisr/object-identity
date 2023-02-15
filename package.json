@@ -17,10 +17,10 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"bench": "node -r tsm bench/index.ts",
 		"build": "bundt",
 		"test": "uvu test -r tsm \".spec.ts$\"",
-		"typecheck": "tsc --noEmit",
-		"bench": "node -r tsm bench/index.ts"
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@marais/tsconfig": "0.0.2",

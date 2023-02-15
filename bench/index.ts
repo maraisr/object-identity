@@ -42,7 +42,11 @@ runner('hashed', {
 		};
 	},
 	['object-hash']() {
-		const options = { algorithm: 'sha1', encoding: 'hex', unorderedSets: false };
+		const options = {
+			algorithm: 'sha1',
+			encoding: 'hex',
+			unorderedSets: false,
+		};
 
 		return () => {
 			return objectHash(getObject(), options);
@@ -67,4 +71,3 @@ runner('passed through', {
 		};
 	},
 });
-

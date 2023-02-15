@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { identify as _identify } from '../src';
 
-const identify = (x: any) => _identify(x, v => v);
+const identify = (x: any) => _identify(x, (v) => v);
 
 // ~ API
 
@@ -27,7 +27,16 @@ Arrays('order should matter', () => {
 });
 
 Arrays('nested', () => {
-	assert.equal(identify([[3, 2, 1], [1, 2, 3]]), identify([[3, 2, 1], [1, 2, 3]]));
+	assert.equal(
+		identify([
+			[3, 2, 1],
+			[1, 2, 3],
+		]),
+		identify([
+			[3, 2, 1],
+			[1, 2, 3],
+		]),
+	);
 });
 
 Arrays('circular', () => {
@@ -151,20 +160,30 @@ const Maps = suite('map');
 
 Maps('basic', () => {
 	assert.equal(
-		identify(new Map([['a', 'b'], ['c', 'd']])),
-		identify(new Map([['c', 'd'], ['a', 'b']])),
+		identify(
+			new Map([
+				['a', 'b'],
+				['c', 'd'],
+			]),
+		),
+		identify(
+			new Map([
+				['c', 'd'],
+				['a', 'b'],
+			]),
+		),
 	);
 });
 
 Maps('circular', () => {
-	const m = new Map([['a', 'b'], ['c', 'd']]);
+	const m = new Map([
+		['a', 'b'],
+		['c', 'd'],
+	]);
 	// @ts-ignore
 	m.set('e', m);
 	assert.not.throws(() => identify(m), /Maximum call stack size exceeded/);
-	assert.equal(
-		identify(m),
-		identify(m),
-	);
+	assert.equal(identify(m), identify(m));
 });
 
 Maps.run();
@@ -174,7 +193,12 @@ Maps.run();
 const Values = suite('values');
 
 Values('primitives', () => {
-	const t = (v: any) => assert.equal(identify(v), identify(v), `Value ${v} should have hashed correctly.`);
+	const t = (v: any) =>
+		assert.equal(
+			identify(v),
+			identify(v),
+			`Value ${v} should have hashed correctly.`,
+		);
 
 	t('test');
 	t(new Date());
@@ -193,7 +217,7 @@ Values('primitives', () => {
 Values('circular ref should be consistent', () => {
 	let o: any = { a: 1, c: 2 };
 	o.b = o;
-	o.d = new Map; // the map is seen 2nd
+	o.d = new Map(); // the map is seen 2nd
 	o.d.set('x', o.d);
 
 	assert.equal(Object.keys(o), ['a', 'c', 'b', 'd']);
@@ -201,7 +225,7 @@ Values('circular ref should be consistent', () => {
 	const a = identify(o);
 
 	o = { a: 1 };
-	o.d = new Map; // the map is seen first
+	o.d = new Map(); // the map is seen first
 	o.d.set('x', o.d);
 	o.b = o;
 	o.c = 2;
@@ -224,7 +248,6 @@ Values('circular deeply nested objects should equal', () => {
 	o1.b.d = o1;
 	o1.x = [9, o1.b];
 
-
 	const o2: any = {
 		b: {
 			c: 123,
@@ -242,7 +265,9 @@ Values('all elements visited', () => {
 	const c = [1];
 	// @ts-ignore
 	c.push(c);
-	const hash = identify({ a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] } });
+	const hash = identify({
+		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
+	});
 	assert.equal(hash, 'oaobacadoefa1{C5}g');
 });
 

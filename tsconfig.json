@@ -5,20 +5,11 @@
 		"baseUrl": ".",
 		"target": "esnext",
 		"removeComments": false,
-		"lib": [
-			"ESNext"
-		],
+		"lib": ["ESNext"],
 		"paths": {
-			"object-identity": [
-				"./src/index.d.ts"
-			]
+			"object-identity": ["./src/index.d.ts"]
 		}
 	},
-	"include": [
-		"test/**/*",
-		"src/**/*"
-	],
-	"exclude": [
-		"node_modules"
-	]
+	"include": ["test/**/*", "src/**/*"],
+	"exclude": ["node_modules"]
 }

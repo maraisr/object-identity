@@ -1,11 +1,14 @@
-import type { identify as _identify } from 'object-identity';
+import type { Hasher } from 'object-identity';
 
 function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	if (input == null || typeof input !== 'object') return input;
 	if (seen.has(input)) return `{C${seen.get(input)}}`;
 	seen.set(input, ++ref_index);
 
-	let out = '', i = 0, tmp: unknown, keys: string[];
+	let out = '',
+		i = 0,
+		tmp: unknown,
+		keys: string[];
 
 	switch (Object.prototype.toString.call(input)) {
 		case '[object Set]':
@@ -43,5 +46,6 @@ function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	}
 }
 
-export const identify: typeof _identify = (input, hasher) =>
-	hasher(walk(input, new WeakMap, 0));
+export function identify<T, H extends Hasher>(input: T, hasher: H): ReturnType<H> {
+	return hasher(walk(input, new WeakMap, 0));
+}

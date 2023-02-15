@@ -28,10 +28,10 @@
 
 ## ⚡ Features
 
-- ✅ **Intuitive**
-- 🌪 **Recursive/Circular support**
-- 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — a mere 503B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
+-	✅ **Intuitive**
+-	🌪 **Recursive/Circular support**
+-	🏎 **Performant** — check the [benchmarks](#-benchmark).
+-	🪶 **Lightweight** — a mere 503B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## 🚀 Usage
 
@@ -65,8 +65,8 @@ benchmark :: passed through
   object-identity^     x 775,302 ops/sec ±0.29% (95 runs sampled)
 ```
 
-> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function` values and other node builtins.
-> So take this benchmark with a grain of salt, as it's only testing "json-like" payloads.
+> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function` values and other node
+> builtins. So take this benchmark with a grain of salt, as it's only testing "json-like" payloads.
 
 ## License
 
