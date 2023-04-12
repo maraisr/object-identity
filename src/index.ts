@@ -46,6 +46,11 @@ function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	}
 }
 
-export function identify<T, H extends Hasher>(input: T, hasher: H): ReturnType<H> {
-	return hasher(walk(input, new WeakMap, 0));
+export function identify<T>(input: T): string;
+export function identify<T, H extends Hasher>(
+	input: T,
+	hasher?: H
+): ReturnType<H> {
+	const v = walk(input, new WeakMap(), 0);
+	return hasher ? hasher(v) : v;
 }

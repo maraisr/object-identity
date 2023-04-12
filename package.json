@@ -1,8 +1,12 @@
 {
 	"name": "object-identity",
-	"version": "0.0.4",
+	"version": "0.0.5",
+	"repository": "maraisr/dldr",
+	"license": "MIT",
+	"author": "Marais Rossow <me@marais.dev> (https://marais.io)",
 	"exports": {
 		".": {
+			"types": "./index.d.ts",
 			"import": "./index.mjs",
 			"require": "./index.js"
 		},
