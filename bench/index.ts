@@ -56,10 +56,8 @@ runner('hashed', {
 
 runner('passed through', {
 	['object-identity']() {
-		const hasher = (val) => val;
-
 		return () => {
-			return identify(getObject(), hasher);
+			return identify(getObject());
 		};
 	},
 	['object-hash']() {
