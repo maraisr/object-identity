@@ -1,7 +1,7 @@
 import type { Hasher } from 'object-identity';
 
 function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
-	if (input == null || typeof input !== 'object') return input;
+	if (input == null || typeof input !== 'object') return String(input);
 	if (seen.has(input)) return `{C${seen.get(input)}}`;
 	seen.set(input, ++ref_index);
 
