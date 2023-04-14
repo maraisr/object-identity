@@ -1,15 +1,13 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { identify as _identify } from '../src';
-
-const identify = (x: any) => _identify(x, (v) => v);
+import { identify } from '../src';
 
 // ~ API
 
 const API = suite('exports');
 
 API('should export a function', () => {
-	assert.type(_identify, 'function');
+	assert.type(identify, 'function');
 });
 
 API.run();

@@ -40,12 +40,15 @@ import { createHash } from 'node:crypto';
 import { identify } from 'object-identity';
 
 // ~> Some user defined hasher
-const hasher = (value) => createHash('sha1').update(value).digest('hex');
+const hash = (value) => {
+  const id = identify(value);
+  return createHash('sha1').update(id).digest('hex');
+}
 
 // ~> identity the object
-const hashA = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) }, hasher);
+const hashA = hash({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
 // ~> an entirely different object, but structurally the same
-const hashB = identify({ a: new Set(['b', 'c', new Map([['e', 'e']])]) }, hasher);
+const hashB = hash({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
 
 // they should equal
 assert.toEqual(hashA, hashB);

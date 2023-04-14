@@ -1,5 +1,3 @@
-import type { Hasher } from 'object-identity';
-
 function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	if (input == null || typeof input !== 'object') return String(input);
 	if (seen.has(input)) return `{C${seen.get(input)}}`;
@@ -46,11 +44,6 @@ function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 	}
 }
 
-export function identify<T>(input: T): string;
-export function identify<T, H extends Hasher>(
-	input: T,
-	hasher?: H
-): ReturnType<H> {
-	const v = walk(input, new WeakMap(), 0);
-	return hasher ? hasher(v) : v;
+export function identify<T>(input: T): string {
+	return walk(input, new WeakMap(), 0);
 }
