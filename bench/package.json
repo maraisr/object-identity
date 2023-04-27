@@ -1,9 +1,9 @@
 {
-	"private": true,
+	"type": "module",
 	"dependencies": {
-		"@types/benchmark": "2.1.2",
-		"@types/node": "^18.16.1",
+		"@thi.ng/bench": "^3.2.10",
 		"benchmark": "2.1.4",
-		"object-hash": "^3.0.0"
+		"object-hash": "^3.0.0",
+		"object-identity": "file:.."
 	}
 }

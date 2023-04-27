@@ -21,7 +21,7 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"bench": "node -r tsm bench/index.ts",
+		"bench": "node bench/index.js",
 		"build": "bundt --minify",
 		"test": "uvu test -r tsm \".spec.ts$\"",
 		"typecheck": "tsc --noEmit"

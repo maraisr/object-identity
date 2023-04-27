@@ -59,13 +59,10 @@ assert.toEqual(hashA, hashB);
 > via the [`/bench`](/bench) directory with Node v16.20.0 (Apple M1 Pro)
 
 ```
-benchmark :: hashed
-  object-hash          x    58,395 ops/sec ±0.23% (96 runs sampled)
-  object-identity      x 1,180,665 ops/sec ±0.44% (96 runs sampled)
-
-benchmark :: passed through
-  object-hash          x   123,699 ops/sec ±0.22% (99 runs sampled)
-  object-identity      x 1,188,861 ops/sec ±0.21% (99 runs sampled)
+  object-identity           ~ 1,759,250 ops/sec ± 0.03%
+  object-hash               ~   137,578 ops/sec ± 0.01%
+★ object-identity :: hashed ~ 1,842,540 ops/sec ± 0.02%
+  object-hash :: hashed     ~    58,219 ops/sec ± 0.01%
 ```
 
 > ^ `object-identity` is not as feature-full it's alternatives, specifically around `function` values and other node
