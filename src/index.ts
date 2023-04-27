@@ -5,39 +5,37 @@ function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 
 	let out = '',
 		i = 0,
-		tmp: unknown,
-		keys: string[];
+		tmp: any;
 
 	switch (Object.prototype.toString.call(input)) {
 		case '[object Set]':
+			tmp = Array.from(input);
 		case '[object Array]': {
+			tmp ||= input;
 			out += 'a';
-			for (tmp of input) out += walk(tmp, seen, ref_index);
+			for (; i < tmp.length; out += walk(tmp[i++], seen, ref_index));
 			return out;
 		}
 
 		case '[object Object]': {
 			out += 'o';
-			keys = Object.keys(input).sort();
-			for (i = 0; i < keys.length; i++) {
-				tmp = keys[i];
-				out += tmp + walk(input[tmp as string], seen, ref_index);
-			}
+			tmp = Object.keys(input).sort();
+			for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], seen, ref_index));
 			return out;
 		}
 
 		case '[object Map]': {
 			out += 'o';
-			keys = Array.from((input as Map<string, unknown>).keys()).sort();
-			for (tmp of keys) out += tmp + walk(input.get(tmp), seen, ref_index);
+			tmp = Array.from((input as Map<string, unknown>).keys()).sort();
+			for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), seen, ref_index));
 			return out;
 		}
 
 		case '[object Date]':
-			return out + 'd' + +input;
+			return 'd' + +input;
 
 		case '[object RegExp]':
-			return out + 'r' + input.source + input.flags;
+			return 'r' + input.source + input.flags;
 
 		default:
 			throw new Error(`Unsupported value ${input}`);
