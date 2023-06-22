@@ -18,8 +18,7 @@ jobs:
       - name: (env) setup pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 8.3.1
-          run_install: false
+          version: 8.5.1
 
       - name: (env) setup node v${{ matrix.node }}
         uses: actions/setup-node@main
