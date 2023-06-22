@@ -23,10 +23,13 @@
 	"scripts": {
 		"bench": "node bench/index.js",
 		"build": "bundt --minify",
+		"format": "prettier --write .",
 		"test": "uvu test -r tsm \".spec.ts$\"",
 		"typecheck": "tsc --noEmit"
 	},
+	"prettier": "@marais/prettier",
 	"devDependencies": {
+		"@marais/prettier": "0.0.2",
 		"@marais/tsconfig": "0.0.4",
 		"bundt": "2.0.0-next.0",
 		"tsm": "2.3.0",

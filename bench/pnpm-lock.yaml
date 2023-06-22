@@ -1,42 +1,53 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@marais/bench': 0.0.8
-  object-hash: ^3.0.0
-  object-identity: file:..
+    '@marais/bench': 0.0.8
+    object-hash: ^3.0.0
+    object-identity: file:..
 
 dependencies:
-  '@marais/bench': 0.0.8
-  object-hash: 3.0.0
-  object-identity: file:..
+    '@marais/bench': 0.0.8
+    object-hash: 3.0.0
+    object-identity: file:..
 
 packages:
+    /@marais/bench/0.0.8:
+        resolution:
+            {
+                integrity: sha512-DZ3TqK1eUN77E2nV2Aj2aady61rveJGqGAPNQglzoJL001HJq9elFLRS6pw25e6geIEmRld9cJ5F/EHFUYa+DQ==,
+            }
+        dependencies:
+            '@thi.ng/bench': 3.4.0
+        dev: false
 
-  /@marais/bench/0.0.8:
-    resolution: {integrity: sha512-DZ3TqK1eUN77E2nV2Aj2aady61rveJGqGAPNQglzoJL001HJq9elFLRS6pw25e6geIEmRld9cJ5F/EHFUYa+DQ==}
-    dependencies:
-      '@thi.ng/bench': 3.4.0
-    dev: false
+    /@thi.ng/api/8.8.2:
+        resolution:
+            {
+                integrity: sha512-kJCBKhHEYv/gSnbrCGnEgoAX/9bRmVSttQ0GVqQIdJlW3IFlgtz3kz357zcYNQ8mB6cY87e0XxJY3VdbYsgiyQ==,
+            }
+        engines: { node: '>=12.7' }
+        dev: false
 
-  /@thi.ng/api/8.8.2:
-    resolution: {integrity: sha512-kJCBKhHEYv/gSnbrCGnEgoAX/9bRmVSttQ0GVqQIdJlW3IFlgtz3kz357zcYNQ8mB6cY87e0XxJY3VdbYsgiyQ==}
-    engines: {node: '>=12.7'}
-    dev: false
+    /@thi.ng/bench/3.4.0:
+        resolution:
+            {
+                integrity: sha512-eY28lsU/7mxV2KrPebo5DTKMDslWDNTcKNNomNcJMKfdDSPmb5Mb7InqekPuv8K2iAC1EVghFBHCi/lIO22qFg==,
+            }
+        engines: { node: '>=12.7' }
+        dependencies:
+            '@thi.ng/api': 8.8.2
+        dev: false
 
-  /@thi.ng/bench/3.4.0:
-    resolution: {integrity: sha512-eY28lsU/7mxV2KrPebo5DTKMDslWDNTcKNNomNcJMKfdDSPmb5Mb7InqekPuv8K2iAC1EVghFBHCi/lIO22qFg==}
-    engines: {node: '>=12.7'}
-    dependencies:
-      '@thi.ng/api': 8.8.2
-    dev: false
+    /object-hash/3.0.0:
+        resolution:
+            {
+                integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==,
+            }
+        engines: { node: '>= 6' }
+        dev: false
 
-  /object-hash/3.0.0:
-    resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
-    engines: {node: '>= 6'}
-    dev: false
-
-  file:..:
-    resolution: {directory: .., type: directory}
-    name: object-identity
-    version: 0.0.6
-    dev: false
+    file:..:
+        resolution: { directory: .., type: directory }
+        name: object-identity
+        version: 0.0.6
+        dev: false

@@ -63,10 +63,7 @@ Objects('basic', () => {
 });
 
 Objects('key ordering', () => {
-	assert.equal(
-		identify({ one: 'one', two: 'two' }),
-		identify({ two: 'two', one: 'one' }),
-	);
+	assert.equal(identify({ one: 'one', two: 'two' }), identify({ two: 'two', one: 'one' }));
 });
 
 Objects('complex keys', () => {
@@ -129,10 +126,7 @@ Objects.run();
 const Sets = suite('set');
 
 Sets('shouldnt be ordered', () => {
-	assert.not.equal(
-		identify(new Set([1, 2, 3])),
-		identify(new Set([3, 2, 1])),
-	);
+	assert.not.equal(identify(new Set([1, 2, 3])), identify(new Set([3, 2, 1])));
 });
 
 Sets('shouldnt be ordered', () => {
@@ -192,11 +186,7 @@ const Values = suite('values');
 
 Values('primitives', () => {
 	const t = (v: any) =>
-		assert.equal(
-			identify(v),
-			identify(v),
-			`Value ${v} should have hashed correctly.`,
-		);
+		assert.equal(identify(v), identify(v), `Value ${v} should have hashed correctly.`);
 
 	t('test');
 	t(new Date());

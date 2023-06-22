@@ -1,7 +1,7 @@
-let seen = new WeakMap<object, number>()
+let seen = new WeakMap<object, number>();
 
 function walk(input: any, ref_index: number) {
-	let type = Object.prototype.toString.call(input)
+	let type = Object.prototype.toString.call(input);
 	let out = '';
 	let i = 0;
 	let tmp: any;

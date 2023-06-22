@@ -28,27 +28,27 @@
 
 ## ⚡ Features
 
--   ✅ **Intuitive**
--   🌪 **Recursive/Circular support**
--   🏎 **Performant** — check the [benchmarks](#-benchmark).
--   🪶 **Lightweight** — a mere 387B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
+- ✅ **Intuitive**
+- 🌪 **Recursive/Circular support**
+- 🏎 **Performant** — check the [benchmarks](#-benchmark).
+- 🪶 **Lightweight** — a mere 387B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## 🚀 Usage
 
 ```ts
-import { createHash } from "node:crypto";
-import { identify } from "object-identity";
+import { createHash } from 'node:crypto';
+import { identify } from 'object-identity';
 
 // ~> Some user defined hasher
 const hash = (value) => {
-	const id = identify(value);
-	return createHash("sha1").update(id).digest("hex");
+  const id = identify(value);
+  return createHash('sha1').update(id).digest('hex');
 };
 
 // ~> identity the object
-const hashA = hash({ a: new Set(["b", "c", new Map([["d", "e"]])]) });
+const hashA = hash({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
 // ~> an entirely different object, but structurally the same
-const hashB = hash({ a: new Set(["b", "c", new Map([["e", "e"]])]) });
+const hashB = hash({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
 
 // they should equal
 assert.toEqual(hashA, hashB);
