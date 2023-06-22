@@ -7,29 +7,36 @@ function walk(input: any, ref_index: number) {
 	let type = Object.prototype.toString.call(input);
 
 	if (input == null || typeof input !== 'object') return String(input);
-	if (!(type === '[object RegExp]' || type === '[object Date]') && seen.has(input)) return seen.get(input)!;
+	if (!(type === '[object RegExp]' || type === '[object Date]') && seen.has(input))
+		return seen.get(input)!;
 	seen.set(input, '~' + ++ref_index);
 
 	switch (type) {
 		case '[object Set]':
 			tmp = Array.from(input);
-		case '[object Array]': {
-			tmp ||= input;
-			out += 'a';
-			for (; i < tmp.length; out += walk(tmp[i++], ref_index));
-		} break;
+		case '[object Array]':
+			{
+				tmp ||= input;
+				out += 'a';
+				for (; i < tmp.length; out += walk(tmp[i++], ref_index));
+			}
+			break;
 
-		case '[object Object]': {
-			out += 'o';
-			tmp = Object.keys(input).sort();
-			for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], ref_index));
-		} break;
+		case '[object Object]':
+			{
+				out += 'o';
+				tmp = Object.keys(input).sort();
+				for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], ref_index));
+			}
+			break;
 
-		case '[object Map]': {
-			out += 'o';
-			tmp = Array.from((input as Map<string, unknown>).keys()).sort();
-			for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), ref_index));
-		} break;
+		case '[object Map]':
+			{
+				out += 'o';
+				tmp = Array.from((input as Map<string, unknown>).keys()).sort();
+				for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), ref_index));
+			}
+			break;
 
 		case '[object Date]':
 			return 'd' + +input;

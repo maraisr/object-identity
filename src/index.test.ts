@@ -92,7 +92,7 @@ Objects('circular', () => {
 });
 
 Objects('partial circular', () => {
-	const o = {v: 1};
+	const o = { v: 1 };
 	const a = ['a', o];
 	assert.equal(identify(a), identify(a));
 });

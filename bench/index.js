@@ -8,7 +8,11 @@ const getObject = () => {
 	const c = [1];
 	// @ts-ignore
 	c.push(c);
-	return { a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] }, d: new Date(), r: /a/ };
+	return {
+		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
+		d: new Date(),
+		r: /a/,
+	};
 };
 
 suite(
