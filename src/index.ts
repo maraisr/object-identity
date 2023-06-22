@@ -1,17 +1,14 @@
-let seen = new WeakMap<object, number>();
+let seen = new WeakMap<object, string>();
 
 function walk(input: any, ref_index: number) {
-	let type = Object.prototype.toString.call(input);
+	let tmp: any;
 	let out = '';
 	let i = 0;
-	let tmp: any;
+	let type = Object.prototype.toString.call(input);
 
-	if (type !== '[object RegExp]' && type !== '[object Date]') {
-		if (input == null || typeof input !== 'object') return String(input);
-
-		if (seen.has(input)) return '~' + seen.get(input);
-		seen.set(input, ++ref_index);
-	}
+	if (input == null || typeof input !== 'object') return String(input);
+	if (!(type === '[object RegExp]' || type === '[object Date]') && seen.has(input)) return seen.get(input)!;
+	seen.set(input, '~' + ++ref_index);
 
 	switch (type) {
 		case '[object Set]':
@@ -20,22 +17,19 @@ function walk(input: any, ref_index: number) {
 			tmp ||= input;
 			out += 'a';
 			for (; i < tmp.length; out += walk(tmp[i++], ref_index));
-			return out;
-		}
+		} break;
 
 		case '[object Object]': {
 			out += 'o';
 			tmp = Object.keys(input).sort();
 			for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], ref_index));
-			return out;
-		}
+		} break;
 
 		case '[object Map]': {
 			out += 'o';
 			tmp = Array.from((input as Map<string, unknown>).keys()).sort();
 			for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), ref_index));
-			return out;
-		}
+		} break;
 
 		case '[object Date]':
 			return 'd' + +input;
@@ -46,6 +40,9 @@ function walk(input: any, ref_index: number) {
 		default:
 			throw new Error(`Unsupported value ${input}`);
 	}
+
+	seen.set(input, out);
+	return out;
 }
 
 export function identify<T>(input: T): string {
