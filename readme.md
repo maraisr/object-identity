@@ -36,19 +36,12 @@
 ## 🚀 Usage
 
 ```ts
-import { createHash } from 'node:crypto';
 import { identify } from 'object-identity';
 
-// ~> Some user defined hasher
-const hash = (value) => {
-  const id = identify(value);
-  return createHash('sha1').update(id).digest('hex');
-};
-
 // ~> identity the object
-const hashA = hash({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
+const id1 = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
 // ~> an entirely different object, but structurally the same
-const hashB = hash({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
+const id2 = identify({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
 
 // they should equal
 assert.toEqual(hashA, hashB);
