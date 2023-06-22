@@ -49,7 +49,7 @@ Arrays('circular should know its circular', () => {
 	const arr = [1, 2, 3];
 	// @ts-ignore
 	arr.push(arr);
-	assert.equal(identify(arr), 'a123{C1}');
+	assert.equal(identify(arr), 'a123~1');
 });
 
 Arrays.run();
@@ -266,7 +266,7 @@ Values('all elements visited', () => {
 	const hash = identify({
 		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
 	});
-	assert.equal(hash, 'oaobacadoefa1{C5}g');
+	assert.equal(hash, 'oaobacadoefa1~5g');
 });
 
 Values('should only be seen once', () => {
@@ -274,7 +274,7 @@ Values('should only be seen once', () => {
 		a: [[1], [2], [3]],
 		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
 	});
-	assert.not.match(hash, /{C\d+}/);
+	assert.not.match(hash, /~\d+/);
 });
 
 Values.run();

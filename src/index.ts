@@ -1,33 +1,39 @@
-function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
-	if (input == null || typeof input !== 'object') return String(input);
-	if (seen.has(input)) return `{C${seen.get(input)}}`;
-	seen.set(input, ++ref_index);
+let seen = new WeakMap<object, number>()
 
-	let out = '',
-		i = 0,
-		tmp: any;
+function walk(input: any, ref_index: number) {
+	let type = Object.prototype.toString.call(input)
+	let out = '';
+	let i = 0;
+	let tmp: any;
 
-	switch (Object.prototype.toString.call(input)) {
+	if (type !== '[object RegExp]' && type !== '[object Date]') {
+		if (input == null || typeof input !== 'object') return String(input);
+
+		if (seen.has(input)) return '~' + seen.get(input);
+		seen.set(input, ++ref_index);
+	}
+
+	switch (type) {
 		case '[object Set]':
 			tmp = Array.from(input);
 		case '[object Array]': {
 			tmp ||= input;
 			out += 'a';
-			for (; i < tmp.length; out += walk(tmp[i++], seen, ref_index));
+			for (; i < tmp.length; out += walk(tmp[i++], ref_index));
 			return out;
 		}
 
 		case '[object Object]': {
 			out += 'o';
 			tmp = Object.keys(input).sort();
-			for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], seen, ref_index));
+			for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], ref_index));
 			return out;
 		}
 
 		case '[object Map]': {
 			out += 'o';
 			tmp = Array.from((input as Map<string, unknown>).keys()).sort();
-			for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), seen, ref_index));
+			for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), ref_index));
 			return out;
 		}
 
@@ -43,5 +49,5 @@ function walk(input: any, seen: WeakMap<any, number>, ref_index: number) {
 }
 
 export function identify<T>(input: T): string {
-	return walk(input, new WeakMap(), 0);
+	return walk(input, 0);
 }
