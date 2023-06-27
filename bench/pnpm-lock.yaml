@@ -43,5 +43,4 @@ packages:
   file:..:
     resolution: {directory: .., type: directory}
     name: object-identity
-    version: 0.1.1
     dev: false
