@@ -7,7 +7,10 @@ function walk(input: any, ref_index: number) {
 	let type = Object.prototype.toString.call(input);
 
 	if (input == null || typeof input !== 'object') return String(input);
-	if (!(type === '[object RegExp]' || type === '[object Date]') && seen.has(input))
+	if (
+		!(type === '[object RegExp]' || type === '[object Date]') &&
+		seen.has(input)
+	)
 		return seen.get(input)!;
 	seen.set(input, '~' + ++ref_index);
 
@@ -26,7 +29,11 @@ function walk(input: any, ref_index: number) {
 			{
 				out += 'o';
 				tmp = Object.keys(input).sort();
-				for (; i < tmp.length; out += tmp[i] + walk(input[tmp[i++]], ref_index));
+				for (
+					;
+					i < tmp.length;
+					out += tmp[i] + walk(input[tmp[i++]], ref_index)
+				);
 			}
 			break;
 
@@ -34,7 +41,11 @@ function walk(input: any, ref_index: number) {
 			{
 				out += 'o';
 				tmp = Array.from((input as Map<string, unknown>).keys()).sort();
-				for (; i < tmp.length; out += tmp[i] + walk(input.get(tmp[i++]), ref_index));
+				for (
+					;
+					i < tmp.length;
+					out += tmp[i] + walk(input.get(tmp[i++]), ref_index)
+				);
 			}
 			break;
 

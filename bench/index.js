@@ -27,7 +27,8 @@ suite(
 		},
 
 		['object-identity :: hashed']() {
-			const hasher = (val) => createHash('sha1').update(val).digest('hex');
+			const hasher = (val) =>
+				createHash('sha1').update(val).digest('hex');
 
 			return (o) => identify(o, hasher);
 		},
