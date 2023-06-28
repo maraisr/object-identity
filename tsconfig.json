@@ -1,15 +1,11 @@
 {
 	"extends": "@marais/tsconfig",
 	"compilerOptions": {
-		"rootDir": ".",
 		"baseUrl": ".",
-		"target": "esnext",
-		"removeComments": false,
-		"lib": ["ESNext"],
 		"paths": {
-			"object-identity": ["./src/index.d.ts"]
+			"object-identity": ["src/index.d.ts"]
 		}
 	},
-	"include": ["test/**/*", "src/**/*"],
+	"include": ["src", "test"],
 	"exclude": ["node_modules"]
 }
