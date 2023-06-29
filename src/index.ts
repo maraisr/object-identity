@@ -1,12 +1,12 @@
 let seen = new WeakMap<object, string>();
 
 function walk(input: any, ref_index: number) {
+	if (input == null || typeof input !== 'object') return String(input);
+
 	let tmp: any;
 	let out = '';
 	let i = 0;
 	let type = Object.prototype.toString.call(input);
-
-	if (input == null || typeof input !== 'object') return String(input);
 	if (
 		!(type === '[object RegExp]' || type === '[object Date]') &&
 		seen.has(input)
