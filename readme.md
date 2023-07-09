@@ -1,29 +1,35 @@
-<div align="right">
+<div align="left">
 
-# `object-identity`
+<samp>
 
-<br />
-<br />
+# object-identity
 
-`npm add object-identity` hashes objects
+</samp>
 
-<span>
-<a href="https://github.com/maraisr/object-identity/actions/workflows/ci.yml">
-	<img src="https://github.com/maraisr/object-identity/actions/workflows/ci.yml/badge.svg"/>
-</a>
+**A utility that provides a stable identity of an object**
+
 <a href="https://npm-stat.com/charts.html?package=object-identity">
-	<img src="https://badgen.net/npm/dw/object-identity?labelColor=black&color=black&cache=600" alt="downloads"/>
+  <img src="https://badgen.net/npm/dm/object-identity?color=black&label=npm%20downloads" alt="js downloads">
 </a>
-<a href="https://packagephobia.com/result?p=object-identity">
-	<img src="https://badgen.net/packagephobia/install/object-identity?labelColor=black&color=black" alt="size"/>
+<a href="https://unpkg.com/object-identity/index.mjs">
+  <img src="https://img.badgesize.io/https://unpkg.com/object-identity/index.mjs?compression=gzip&label=gzip&color=black" alt="gzip size" />
 </a>
-<a href="https://bundlephobia.com/result?p=object-identity">
-	<img src="https://badgen.net/bundlephobia/minzip/object-identity?labelColor=black&color=black" alt="size"/>
+<a href="https://unpkg.com/object-identity/index.mjs">
+  <img src="https://img.badgesize.io/https://unpkg.com/object-identity/index.mjs?compression=brotli&label=brotli&color=black" alt="brotli size" />
 </a>
-</span>
 
-<br />
-<br />
+<br>
+<br>
+
+<sup>
+
+This is free to use software, but if you do like it, consisder supporting me ❤️
+
+[![sponsor me](https://badgen.net/badge/icon/sponsor?icon=github&label&color=gray)](https://github.com/sponsors/maraisr)
+[![buy me a coffee](https://badgen.net/badge/icon/buymeacoffee?icon=buymeacoffee&label&color=gray)](https://www.buymeacoffee.com/marais)
+
+</sup>
+
 </div>
 
 ## ⚡ Features
