@@ -8,6 +8,9 @@ dependencies:
   '@marais/bench':
     specifier: 0.0.8
     version: 0.0.8
+  json-stable-stringify:
+    specifier: ^1.0.2
+    version: 1.0.2
   object-hash:
     specifier: ^3.0.0
     version: 3.0.0
@@ -16,34 +19,41 @@ dependencies:
     version: file:..
 
 packages:
+
   /@marais/bench@0.0.8:
-    resolution:
-      { integrity: sha512-DZ3TqK1eUN77E2nV2Aj2aady61rveJGqGAPNQglzoJL001HJq9elFLRS6pw25e6geIEmRld9cJ5F/EHFUYa+DQ== }
+    resolution: {integrity: sha512-DZ3TqK1eUN77E2nV2Aj2aady61rveJGqGAPNQglzoJL001HJq9elFLRS6pw25e6geIEmRld9cJ5F/EHFUYa+DQ==}
     dependencies:
       '@thi.ng/bench': 3.4.0
     dev: false
 
   /@thi.ng/api@8.8.2:
-    resolution:
-      { integrity: sha512-kJCBKhHEYv/gSnbrCGnEgoAX/9bRmVSttQ0GVqQIdJlW3IFlgtz3kz357zcYNQ8mB6cY87e0XxJY3VdbYsgiyQ== }
-    engines: { node: '>=12.7' }
+    resolution: {integrity: sha512-kJCBKhHEYv/gSnbrCGnEgoAX/9bRmVSttQ0GVqQIdJlW3IFlgtz3kz357zcYNQ8mB6cY87e0XxJY3VdbYsgiyQ==}
+    engines: {node: '>=12.7'}
     dev: false
 
   /@thi.ng/bench@3.4.0:
-    resolution:
-      { integrity: sha512-eY28lsU/7mxV2KrPebo5DTKMDslWDNTcKNNomNcJMKfdDSPmb5Mb7InqekPuv8K2iAC1EVghFBHCi/lIO22qFg== }
-    engines: { node: '>=12.7' }
+    resolution: {integrity: sha512-eY28lsU/7mxV2KrPebo5DTKMDslWDNTcKNNomNcJMKfdDSPmb5Mb7InqekPuv8K2iAC1EVghFBHCi/lIO22qFg==}
+    engines: {node: '>=12.7'}
     dependencies:
       '@thi.ng/api': 8.8.2
     dev: false
 
+  /json-stable-stringify@1.0.2:
+    resolution: {integrity: sha512-eunSSaEnxV12z+Z73y/j5N37/In40GK4GmsSy+tEHJMxknvqnA7/djeYtAgW0GsWHUfg+847WJjKaEylk2y09g==}
+    dependencies:
+      jsonify: 0.0.1
+    dev: false
+
+  /jsonify@0.0.1:
+    resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}
+    dev: false
+
   /object-hash@3.0.0:
-    resolution:
-      { integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw== }
-    engines: { node: '>= 6' }
+    resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
+    engines: {node: '>= 6'}
     dev: false
 
   file:..:
-    resolution: { directory: .., type: directory }
+    resolution: {directory: .., type: directory}
     name: object-identity
     dev: false

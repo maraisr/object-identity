@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "@marais/bench": "0.0.8",
+    "json-stable-stringify": "^1.0.2",
     "object-hash": "^3.0.0",
     "object-identity": "file:.."
   }

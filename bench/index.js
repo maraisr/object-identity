@@ -3,6 +3,7 @@ import { suite } from '@marais/bench';
 import { createHash } from 'crypto';
 import objectHash from 'object-hash';
 import { identify } from 'object-identity';
+import jsonStableStringify from 'json-stable-stringify';
 
 const getObject = () => {
 	const c = [1];
@@ -25,10 +26,11 @@ suite(
 
 			return (o) => objectHash(o, options);
 		},
-
+		'json-stable-stringify'() {
+			return (o) => jsonStableStringify(o);
+		},
 		['object-identity :: hashed']() {
-			const hasher = (val) =>
-				createHash('sha1').update(val).digest('hex');
+			const hasher = (val) => createHash('sha1').update(val).digest('hex');
 
 			return (o) => identify(o, hasher);
 		},
