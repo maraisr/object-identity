@@ -1,6 +1,5 @@
 import { suite } from '@marais/bench';
 
-import { createHash } from 'crypto';
 import objectHash from 'object-hash';
 import { identify } from 'object-identity';
 import jsonStableStringify from 'json-stable-stringify';
@@ -18,30 +17,16 @@ const getObject = () => {
 
 suite(
 	{
-		['object-identity']() {
+		'object-identity'() {
 			return (o) => identify(o);
 		},
-		['object-hash']() {
+		'object-hash'() {
 			const options = { algorithm: 'passthrough', unorderedSets: false };
 
 			return (o) => objectHash(o, options);
 		},
 		'json-stable-stringify'() {
 			return (o) => jsonStableStringify(o);
-		},
-		['object-identity :: hashed']() {
-			const hasher = (val) => createHash('sha1').update(val).digest('hex');
-
-			return (o) => identify(o, hasher);
-		},
-		['object-hash :: hashed']() {
-			const options = {
-				algorithm: 'sha1',
-				encoding: 'hex',
-				unorderedSets: false,
-			};
-
-			return (o) => objectHash(o, options);
 		},
 	},
 	(run) => {
