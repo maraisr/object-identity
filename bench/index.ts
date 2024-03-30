@@ -1,12 +1,13 @@
-import { suite } from '@marais/bench';
+import { suite } from 'npm:@marais/bench';
 
-import objectHash from 'object-hash';
-import { identify } from 'object-identity';
-import jsonStableStringify from 'json-stable-stringify';
+import objectHash from 'npm:object-hash';
+import jsonStableStringify from 'npm:json-stable-stringify';
+
+import { identify } from '../mod.ts';
 
 const getObject = () => {
 	const c = [1];
-	// @ts-ignore
+	// @ts-expect-error circular
 	c.push(c);
 	return {
 		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
@@ -15,7 +16,7 @@ const getObject = () => {
 	};
 };
 
-suite(
+suite<any>(
 	{
 		'object-identity'() {
 			return (o) => identify(o);

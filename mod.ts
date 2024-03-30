@@ -10,13 +10,14 @@ function walk(input: any, ref_index: number) {
 	if (
 		!(type === '[object RegExp]' || type === '[object Date]') &&
 		seen.has(input)
-	)
+	) {
 		return seen.get(input)!;
+	}
 	seen.set(input, '~' + ++ref_index);
 
 	switch (type) {
 		case '[object Set]':
-			tmp = Array.from(input);
+			tmp = Array.from(input as Set<unknown>);
 		case '[object Array]':
 			{
 				tmp ||= input;
@@ -63,6 +64,18 @@ function walk(input: any, ref_index: number) {
 	return out;
 }
 
+/**
+ * Creates a shape equivalent identifier for an input object.
+ * This is useful for comparing objects, where keys could be provided in any order.
+ *
+ * @example
+ * ```ts
+ * const obj = { a: 1, b: 2 };
+ * const obj2 = { b: 2, a: 1 };
+ *
+ * console.log(identify(obj) === identify(obj2)); // true
+ * ```
+ */
 export function identify<T>(input: T): string {
 	return walk(input, 0);
 }

@@ -2,31 +2,15 @@
 
 <samp>
 
-# object-identity
+# object-identity [![licenses](https://licenses.dev/b/npm/object-identity?style=dark)](https://licenses.dev/npm/object-identity)
 
 </samp>
 
 **A utility that provides a stable identity of an object**
 
-<a href="https://npm-stat.com/charts.html?package=object-identity">
-  <img src="https://badgen.net/npm/dm/object-identity?color=black&label=npm%20downloads" alt="js downloads">
-</a>
-<a href="https://licenses.dev/npm/object-identity">
-  <img src="https://licenses.dev/b/npm/object-identity?style=dark" alt="licenses" />
-</a>
-<a href="https://unpkg.com/object-identity/index.mjs">
-  <img src="https://img.badgesize.io/https://unpkg.com/object-identity/index.mjs?compression=gzip&label=gzip&color=black" alt="gzip size" />
-</a>
-<a href="https://unpkg.com/object-identity/index.mjs">
-  <img src="https://img.badgesize.io/https://unpkg.com/object-identity/index.mjs?compression=brotli&label=brotli&color=black" alt="brotli size" />
-</a>
-
-<br>
-<br>
-
 <sup>
 
-This is free to use software, but if you do like it, consisder supporting me ❤️
+This is free to use software, but if you do like it, consider supporting me ❤️
 
 [![sponsor me](https://badgen.net/badge/icon/sponsor?icon=github&label&color=gray)](https://github.com/sponsors/maraisr)
 [![buy me a coffee](https://badgen.net/badge/icon/buymeacoffee?icon=buymeacoffee&label&color=gray)](https://www.buymeacoffee.com/marais)
@@ -40,12 +24,19 @@ This is free to use software, but if you do like it, consisder supporting me ❤
 - ✅ **Intuitive**
 - 🌪 **Recursive/Circular support**
 - 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — a mere 387B and no [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
+- 🪶 **Lightweight** — a mere 387B and no
+  [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## 🚀 Usage
 
+> Avaliable on [jsr](https://jsr.io/@mr/object-identity),
+> [NPM](https://npmjs.com/package/object-identity) and
+> [deno.land](https://deno.land/x/object_identity)
+
 ```ts
 import { identify } from 'object-identity';
+// or
+import { identify } from 'https://deno.land/x/object_identity';
 
 // ~> identity the object
 const id1 = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
@@ -58,16 +49,17 @@ assert.toEqual(hashA, hashB);
 
 ## 💨 Benchmark
 
-> via the [`/bench`](/bench) directory with Node v18.16.1 (Apple M1 Pro)
+> via the [`/bench`](/bench) directory with deno 1.41.3
 
 ```
-✔ object-identity       ~ 55,252,648 ops/sec ± 0.11%
-✔ object-hash           ~     96,936 ops/sec ± 0.01%
-✔ json-stable-stringify ~    605,425 ops/sec ± 0.02%
+✔ object-identity       ~ 14,646,170 ops/sec ± 0.10%
+✔ object-hash           ~    144,060 ops/sec ± 0.01%
+✔ json-stable-stringify ~    638,559 ops/sec ± 0.01%
 ```
 
-> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function` values and other node
-> builtins. So take this benchmark with a grain of salt, as it's only testing "json-like" payloads.
+> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`
+> values and other node builtins. So take this benchmark with a grain of salt, as it's only testing
+> "json-like" payloads.
 
 ## License
 

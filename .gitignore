@@ -1,17 +1,5 @@
-node_modules
 .DS_Store
-*-lock.json
-*.lock
-*.log
-
-/coverage
-/.nyc_output
-
-# Editors
-*.iml
-/.idea
-/.vscode
-
-/index.js
-/index.mjs
-/index.d.ts
+node_modules
+/npm
+*.lcov
+/cov
