@@ -4,7 +4,8 @@
     "specifiers": {
       "npm:@marais/bench": "npm:@marais/bench@0.0.8",
       "npm:json-stable-stringify": "npm:json-stable-stringify@1.1.1",
-      "npm:object-hash": "npm:object-hash@3.0.0"
+      "npm:object-hash": "npm:object-hash@3.0.0",
+      "npm:tiny-stable-stringify": "npm:tiny-stable-stringify@0.1.3"
     },
     "npm": {
       "@marais/bench@0.0.8": {
@@ -126,6 +127,10 @@
           "gopd": "gopd@1.0.1",
           "has-property-descriptors": "has-property-descriptors@1.0.2"
         }
+      },
+      "tiny-stable-stringify@0.1.3": {
+        "integrity": "sha512-dkqJwMg6uHTlmXREDkvIkHtbgwKpTZ6cfcZSH1rXJEFhH8lhS6pvZk+mUbHXE6LLLyte4X6EGjaFj+pfBmPlcA==",
+        "dependencies": {}
       }
     }
   },

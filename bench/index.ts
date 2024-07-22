@@ -2,6 +2,7 @@ import { suite } from 'npm:@marais/bench';
 
 import objectHash from 'npm:object-hash';
 import jsonStableStringify from 'npm:json-stable-stringify';
+import { stringify as tinyStableStringify } from 'npm:tiny-stable-stringify';
 
 import { identify } from '../mod.ts';
 
@@ -28,6 +29,9 @@ suite<any>(
 		},
 		'json-stable-stringify'() {
 			return (o) => jsonStableStringify(o);
+		},
+		'tiny-stable-stringify'() {
+			return (o) => tinyStableStringify(o);
 		},
 	},
 	(run) => {
