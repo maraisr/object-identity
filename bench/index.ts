@@ -17,26 +17,24 @@ const getObject = () => {
 	};
 };
 
-suite<any>(
+suite<unknown>(
 	{
 		'object-identity'() {
-			return (o) => identify(o);
+			return () => identify(getObject());
 		},
 		'object-hash'() {
 			const options = { algorithm: 'passthrough', unorderedSets: false };
-
-			return (o) => objectHash(o, options);
+			return () => objectHash(getObject(), options);
 		},
 		'json-stable-stringify'() {
-			return (o) => jsonStableStringify(o);
+			return () => jsonStableStringify(getObject());
 		},
 		'tiny-stable-stringify'() {
-			return (o) => tinyStableStringify(o);
+			return () => tinyStableStringify(getObject());
 		},
 	},
 	(run) => {
-		const o = getObject();
-		run(undefined, () => o);
+		run(undefined);
 	},
 	{
 		size: 50,

@@ -52,10 +52,10 @@ assert.toEqual(hashA, hashB);
 > via the [`/bench`](/bench) directory with deno 1.45.2
 
 ```
-✔ object-identity       ~ 13,888,888 ops/sec ± 2.35%
-✔ object-hash           ~    126,262 ops/sec ± 0.20%
-✔ json-stable-stringify ~    664,893 ops/sec ± 0.51%
-✔ tiny-stable-stringify ~    642,673 ops/sec ± 0.50%
+✔ object-identity       ~ 313,676 ops/sec ± 0.39%
+✔ object-hash           ~  88,873 ops/sec ± 0.16%
+✔ json-stable-stringify ~ 444,839 ops/sec ± 0.41%
+✔ tiny-stable-stringify ~ 520,833 ops/sec ± 0.45%
 ```
 
 > ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`
