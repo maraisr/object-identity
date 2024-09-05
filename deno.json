@@ -9,6 +9,7 @@
 		"@deno/dnt": "jsr:@deno/dnt@^0.41.0",
 		"@std/assert": "jsr:@std/assert@^0.221.0"
 	},
+	"lock": false,
 	"lint": {
 		"rules": {
 			"exclude": [
