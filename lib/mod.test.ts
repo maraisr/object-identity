@@ -5,7 +5,7 @@ import {
 	assertNotEquals,
 	assertNotMatch,
 } from '@std/assert';
-import { identify } from './mod.ts';
+import { identify } from '../lib/mod.ts';
 
 Deno.test('exports', () => {
 	assertInstanceOf(identify, Function);
