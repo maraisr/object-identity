@@ -8,6 +8,9 @@
 
 **A utility that provides a stable identity of an object**
 
+<br>
+<br>
+
 <sup>
 
 This is free to use software, but if you do like it, consider supporting me ❤️
@@ -27,16 +30,15 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 - 🪶 **Lightweight** — a mere 387B and no
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
-## 🚀 Usage
+## ⚙️ Install
 
-> Avaliable on [jsr](https://jsr.io/@mr/object-identity),
-> [NPM](https://npmjs.com/package/object-identity) and
-> [deno.land](https://deno.land/x/object_identity)
+- **npm** — available as [`object-identity`](https://www.npmjs.com/package/object-identity)
+- **JSR** — available as [`@mr/object-identity`](https://jsr.io/@mr/object-identity)
+
+## 🚀 Usage
 
 ```ts
 import { identify } from 'object-identity';
-// or
-import { identify } from 'https://deno.land/x/object_identity';
 
 // ~> identity the object
 const id1 = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
@@ -49,13 +51,19 @@ assert.toEqual(hashA, hashB);
 
 ## 💨 Benchmark
 
-> via the [`/bench`](/bench) directory with deno 1.45.2
-
 ```
-✔ object-identity       ~ 313,676 ops/sec ± 0.39%
-✔ object-hash           ~  88,873 ops/sec ± 0.16%
-✔ json-stable-stringify ~ 444,839 ops/sec ± 0.41%
-✔ tiny-stable-stringify ~ 520,833 ops/sec ± 0.45%
+benchmark                  time (avg)        iter/s             (min … max)       p75       p99      p995
+--------------------------------------------------------------------------- -----------------------------
+object-identity              2.2 µs/iter     453,803.6     (1.99 µs … 2.44 µs) 2.35 µs 2.44 µs 2.44 µs
+object-hash                 8.76 µs/iter     114,168.3   (7.96 µs … 225.33 µs) 8.71 µs 11.75 µs 14.92 µs
+json-stable-stringify       1.77 µs/iter     565,184.5     (1.75 µs … 1.86 µs) 1.77 µs 1.86 µs 1.86 µs
+tiny-stable-stringify       1.63 µs/iter     612,009.4     (1.62 µs … 1.68 µs) 1.64 µs 1.68 µs 1.68 µs
+
+summary
+  object-identity
+   1.35x slower than tiny-stable-stringify
+   1.25x slower than json-stable-stringify
+   3.97x faster than object-hash
 ```
 
 > ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`
