@@ -27,7 +27,7 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 - ✅ **Intuitive**
 - 🌪 **Recursive/Circular support**
 - 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — a mere 387B and no
+- 🪶 **Lightweight** — around 1.4 kB generated ESM and no
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## ⚙️ Install
@@ -54,16 +54,16 @@ assert.toEqual(hashA, hashB);
 ```
 benchmark               time/iter (avg)        iter/s      (min … max)      p75      p99     p995
 ----------------------- --------------- ------------- ---------------- -------- -------- --------
-object-identity                609.3 ns     1,641,000 (591.9 ns … 858.9 ns) 607.5 ns 858.9 ns 858.9 ns
-object-hash                      7.2 µs       139,400 (  6.4 µs … 437.8 µs)   6.8 µs  22.5 µs  36.6 µs
-json-stable-stringify            1.8 µs       554,600 (  1.7 µs …   3.2 µs)   1.7 µs   3.2 µs   3.2 µs
-tiny-stable-stringify            1.6 µs       607,600 (  1.6 µs …   1.8 µs)   1.7 µs   1.8 µs   1.8 µs
+object-identity                557.4 ns     1,794,000 (538.1 ns … 888.2 ns) 556.9 ns 593.5 ns 888.2 ns
+object-hash                      6.7 µs       150,300 (  6.4 µs …   7.3 µs)   6.7 µs   7.3 µs   7.3 µs
+json-stable-stringify            1.7 µs       598,400 (  1.6 µs …   2.3 µs)   1.7 µs   2.3 µs   2.3 µs
+tiny-stable-stringify            1.6 µs       628,200 (  1.6 µs …   1.7 µs)   1.6 µs   1.7 µs   1.7 µs
 
 summary
   object-identity
-     2.70x faster than tiny-stable-stringify
-     2.96x faster than json-stable-stringify
-    11.77x faster than object-hash
+     2.86x faster than tiny-stable-stringify
+     3.00x faster than json-stable-stringify
+    11.94x faster than object-hash
 ```
 
 > ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`

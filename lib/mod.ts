@@ -34,8 +34,12 @@ function walk(input: any, seen: any[], depth: number): string {
 	) {
 		out = 'o';
 		keys = Object.keys(input);
-		if (keys.length > 1) keys.sort();
-		for (; i < keys.length; out += keys[i] + walk(input[keys[i++]], seen, depth));
+		if (keys.length === 1) {
+			out += keys[0] + walk(input[keys[0]], seen, depth);
+		} else {
+			if (keys.length > 1) keys.sort();
+			for (; i < keys.length; out += keys[i] + walk(input[keys[i++]], seen, depth));
+		}
 	} else {
 		throw new Error(`Unsupported value ${input}`);
 	}
