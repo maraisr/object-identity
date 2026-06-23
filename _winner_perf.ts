@@ -245,6 +245,130 @@ function pairEarlySmallMapLazy(input: any, seen: any[], depth: number): string {
 	return out;
 }
 
+function pairEarlySmallMapLazyTweak(input: any, seen: any[], depth: number): string {
+	if (input == null || typeof input !== 'object') return '' + input;
+	if (input instanceof Date) return 'd' + +input;
+	if (input instanceof RegExp) return 'r' + input.source + input.flags;
+	let ref = seen.indexOf(input);
+	if (~ref) return (ref = seen[ref + 1]) > 0 ? '~' + ref : ref;
+	ref = seen.push(input, ++depth) - 1;
+	let out: string, i = 0, keys: any;
+	if (Array.isArray(input)) {
+		out = 'a';
+		for (; i < input.length; out += pairEarlySmallMapLazyTweak(input[i++], seen, depth));
+	} else if (input instanceof Set) {
+		out = 'a';
+		for (keys of input) out += pairEarlySmallMapLazyTweak(keys, seen, depth);
+	} else if (input instanceof Map) {
+		out = 'o';
+		if (input.size > 1) {
+			for (
+				keys = [...input.keys()].sort();
+				i < keys.length;
+				out += keys[i] + pairEarlySmallMapLazyTweak(input.get(keys[i++]), seen, depth)
+			);
+		} else {
+			for (keys of input) out += keys[0] + pairEarlySmallMapLazyTweak(keys[1], seen, depth);
+		}
+	} else if (
+		input.constructor === Object || Object.prototype.toString.call(input) === '[object Object]'
+	) {
+		out = 'o';
+		keys = Object.keys(input);
+		if (keys.length > 1) keys.sort();
+		for (
+			;
+			i < keys.length;
+			out += keys[i] + pairEarlySmallMapLazyTweak(input[keys[i++]], seen, depth)
+		);
+	} else throw new Error(`Unsupported value ${input}`);
+	seen[ref] = out;
+	return out;
+}
+
+function pairEarlySmallMapLazyArray2(input: any, seen: any[], depth: number): string {
+	if (input === null || typeof input !== 'object') return '' + input;
+	if (input instanceof Date) return 'd' + +input;
+	if (input instanceof RegExp) return 'r' + input.source + input.flags;
+	let ref = seen.indexOf(input);
+	if (ref > -1) return (ref = seen[ref + 1]) > 0 ? '~' + ref : ref;
+	ref = seen.push(input, ++depth) - 1;
+	let out: string, i = 0, keys: any;
+	if (Array.isArray(input)) {
+		out = input.length === 2
+			? 'a' +
+				pairEarlySmallMapLazyArray2(input[0], seen, depth) +
+				pairEarlySmallMapLazyArray2(input[1], seen, depth)
+			: 'a';
+		for (; i < input.length && input.length !== 2; out += pairEarlySmallMapLazyArray2(input[i++], seen, depth));
+	} else if (input instanceof Set) {
+		out = 'a';
+		for (let value of input) out += pairEarlySmallMapLazyArray2(value, seen, depth);
+	} else if (input instanceof Map) {
+		out = 'o';
+		if (input.size > 1) {
+			for (
+				keys = [...input.keys()].sort();
+				i < keys.length;
+				out += keys[i] + pairEarlySmallMapLazyArray2(input.get(keys[i++]), seen, depth)
+			);
+		} else {
+			for (keys of input) out += keys[0] + pairEarlySmallMapLazyArray2(keys[1], seen, depth);
+		}
+	} else if (
+		input.constructor === Object || Object.prototype.toString.call(input) === '[object Object]'
+	) {
+		out = 'o';
+		keys = Object.keys(input);
+		if (keys.length > 1) keys.sort();
+		for (
+			;
+			i < keys.length;
+			out += keys[i] + pairEarlySmallMapLazyArray2(input[keys[i++]], seen, depth)
+		);
+	} else throw new Error(`Unsupported value ${input}`);
+	seen[ref] = out;
+	return out;
+}
+
+function pairEarlySmallMapLazyUnified(input: any, seen: any[], depth: number): string {
+	if (input === null || typeof input !== 'object') return '' + input;
+	if (input instanceof Date) return 'd' + +input;
+	if (input instanceof RegExp) return 'r' + input.source + input.flags;
+	let ref: any = seen.indexOf(input);
+	if (ref > -1) return (ref = seen[ref + 1]) > 0 ? '~' + ref : ref;
+	ref = seen.push(input, ++depth) - 1;
+	let out: string, i = 0, keys: any;
+	if (Array.isArray(input) || input instanceof Set) {
+		out = 'a';
+		for (keys of input) out += pairEarlySmallMapLazyUnified(keys, seen, depth);
+	} else if (input instanceof Map) {
+		out = 'o';
+		if (input.size > 1) {
+			for (
+				keys = [...input.keys()].sort();
+				i < keys.length;
+				out += keys[i] + pairEarlySmallMapLazyUnified(input.get(keys[i++]), seen, depth)
+			);
+		} else {
+			for (keys of input) out += keys[0] + pairEarlySmallMapLazyUnified(keys[1], seen, depth);
+		}
+	} else if (
+		input.constructor === Object || Object.prototype.toString.call(input) === '[object Object]'
+	) {
+		out = 'o';
+		keys = Object.keys(input);
+		if (keys.length > 1) keys.sort();
+		for (
+			;
+			i < keys.length;
+			out += keys[i] + pairEarlySmallMapLazyUnified(input[keys[i++]], seen, depth)
+		);
+	} else throw new Error(`Unsupported value ${input}`);
+	seen[ref] = out;
+	return out;
+}
+
 function pairObjFirst(input: any, seen: any[], depth: number): string {
 	if (input === null || typeof input !== 'object') return '' + input;
 	let ref = seen.indexOf(input);
@@ -322,6 +446,9 @@ const variants: Record<string, (input: any) => string> = {
 	pairEarlyNoSkip: (input) => pairEarlyNoSkip(input, [], 0),
 	pairEarlySmallMap: (input) => pairEarlySmallMap(input, [], 0),
 	pairEarlySmallMapLazy: (input) => pairEarlySmallMapLazy(input, [], 0),
+	pairEarlySmallMapLazyTweak: (input) => pairEarlySmallMapLazyTweak(input, [], 0),
+	pairEarlySmallMapLazyArray2: (input) => pairEarlySmallMapLazyArray2(input, [], 0),
+	pairEarlySmallMapLazyUnified: (input) => pairEarlySmallMapLazyUnified(input, [], 0),
 	pairObjFirst: (input) => pairObjFirst(input, [], 0),
 	pairEarlyObjFirst: (input) => pairEarlyObjFirst(input, [], 0),
 };

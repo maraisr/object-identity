@@ -4,9 +4,9 @@ function walk(input: any, seen: any[], depth: number): string {
 	if (input instanceof Date) return 'd' + +input;
 	if (input instanceof RegExp) return 'r' + input.source + input.flags;
 
-	let ref = seen.indexOf(input);
-	if (ref > -1) return seen[ref + 1];
-	ref = seen.push(input, '~' + ++depth) - 1;
+	let ref: any = seen.indexOf(input);
+	if (ref > -1) return (ref = seen[ref + 1]) > 0 ? '~' + ref : ref;
+	ref = seen.push(input, ++depth) - 1;
 
 	let out: string;
 	let i = 0;

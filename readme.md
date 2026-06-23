@@ -52,18 +52,18 @@ assert.toEqual(hashA, hashB);
 ## 💨 Benchmark
 
 ```
-benchmark                  time (avg)        iter/s             (min … max)       p75       p99      p995
---------------------------------------------------------------------------- -----------------------------
-object-identity              2.2 µs/iter     453,803.6     (1.99 µs … 2.44 µs) 2.35 µs 2.44 µs 2.44 µs
-object-hash                 8.76 µs/iter     114,168.3   (7.96 µs … 225.33 µs) 8.71 µs 11.75 µs 14.92 µs
-json-stable-stringify       1.77 µs/iter     565,184.5     (1.75 µs … 1.86 µs) 1.77 µs 1.86 µs 1.86 µs
-tiny-stable-stringify       1.63 µs/iter     612,009.4     (1.62 µs … 1.68 µs) 1.64 µs 1.68 µs 1.68 µs
+benchmark               time/iter (avg)        iter/s      (min … max)      p75      p99     p995
+----------------------- --------------- ------------- ---------------- -------- -------- --------
+object-identity                609.3 ns     1,641,000 (591.9 ns … 858.9 ns) 607.5 ns 858.9 ns 858.9 ns
+object-hash                      7.2 µs       139,400 (  6.4 µs … 437.8 µs)   6.8 µs  22.5 µs  36.6 µs
+json-stable-stringify            1.8 µs       554,600 (  1.7 µs …   3.2 µs)   1.7 µs   3.2 µs   3.2 µs
+tiny-stable-stringify            1.6 µs       607,600 (  1.6 µs …   1.8 µs)   1.7 µs   1.8 µs   1.8 µs
 
 summary
   object-identity
-   1.35x slower than tiny-stable-stringify
-   1.25x slower than json-stable-stringify
-   3.97x faster than object-hash
+     2.70x faster than tiny-stable-stringify
+     2.96x faster than json-stable-stringify
+    11.77x faster than object-hash
 ```
 
 > ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`
