@@ -1,20 +1,116 @@
-import {
-	assert,
-	assertEquals,
-	assertInstanceOf,
-	assertNotEquals,
-	assertNotMatch,
-	assertThrows,
-} from '@std/assert';
+import { assert, assertEquals, assertNotEquals, assertNotMatch, assertThrows } from '@std/assert';
 import fc from 'fast-check';
 import { identify } from '../lib/mod.ts';
 
-Deno.test('exports', () => {
-	assertInstanceOf(identify, Function);
+Deno.test('exports :: identify is a function', () => {
+	assertEquals(typeof identify, 'function');
 });
 
-Deno.test('arrays :: flat', () => {
+// ~> Primitives
+
+Deno.test('primitives :: are deterministic', () => {
+	const stable = (v: unknown) => assertEquals(identify(v), identify(v), `${String(v)} is unstable`);
+	stable('hello');
+	stable('');
+	stable(0);
+	stable(-0);
+	stable(123);
+	stable(-4.5);
+	stable(NaN);
+	stable(Infinity);
+	stable(-Infinity);
+	stable(true);
+	stable(false);
+	stable(null);
+	stable(undefined);
+	stable(123n);
+});
+
+Deno.test('primitives :: distinct values are distinct', () => {
+	assertNotEquals(identify(1), identify(2));
+	assertNotEquals(identify('a'), identify('b'));
+	assertNotEquals(identify(true), identify(false));
+	assertNotEquals(identify(1.5), identify(1.50001));
+	assertNotEquals(identify(''), identify(' '));
+});
+
+Deno.test('primitives :: are distinct from their string form', () => {
+	// A number, boolean, or null is its own thing, never its text spelling.
+	assertNotEquals(identify(1), identify('1'));
+	assertEquals(identify('1'), identify('1'));
+	assertNotEquals(identify(true), identify('true'));
+	assertNotEquals(identify(null), identify('null'));
+	assertNotEquals(identify(undefined), identify('undefined'));
+});
+
+Deno.test('strings :: preserve exact content', () => {
+	assertEquals(identify('café'), identify('café'));
+	assertEquals(identify('a\n\t"b'), identify('a\n\t"b'));
+	assertNotEquals(identify('a'), identify('A'));
+	assertNotEquals(identify('ab'), identify('a b'));
+	// A unicode round-trip over a wide range stays deterministic.
+	for (let i = 0; i < 0x2000; i += 7) {
+		const s = String.fromCharCode(i);
+		assertEquals(identify(s), identify(s));
+	}
+});
+
+Deno.test('numbers :: float precision is retained', () => {
+	assertEquals(identify(0.1 + 0.2), identify(0.30000000000000004));
+	assertNotEquals(identify(0.1 + 0.2), identify(0.3));
+	assertNotEquals(identify(1), identify(1.0000000000000002));
+});
+
+Deno.test('numbers :: signed zero collapses', () => {
+	// -0 and 0 are conventionally the same value.
+	assertEquals(identify(-0), identify(0));
+});
+
+Deno.test('numbers :: non-finite values fold into null', () => {
+	assertEquals(identify(NaN), identify(null));
+	assertEquals(identify(Infinity), identify(null));
+	assertEquals(identify(-Infinity), identify(null));
+});
+
+Deno.test('bigint :: matches the equivalent number', () => {
+	assertEquals(identify(1n), identify(1));
+	assertEquals(identify(42n), identify(42));
+	assertEquals(identify(0n), identify(0));
+});
+
+Deno.test('symbols :: throw (cannot be coerced)', () => {
+	assertThrows(() => identify(Symbol()));
+	assertThrows(() => identify(Symbol('x')));
+});
+
+// ~> Dates & RegExps
+
+Deno.test('dates :: equal instants match, different instants differ', () => {
+	assertEquals(identify(new Date(0)), identify(new Date(0)));
+	assertEquals(identify(new Date(1700000000000)), identify(new Date(1700000000000)));
+	assertNotEquals(identify(new Date(0)), identify(new Date(1)));
+});
+
+Deno.test('dates :: are distinct from their numeric timestamp', () => {
+	assertNotEquals(identify(new Date(0)), identify(0));
+});
+
+Deno.test('regexps :: source and flags both matter', () => {
+	assertEquals(identify(/abc/gi), identify(/abc/gi));
+	assertNotEquals(identify(/a/), identify(/b/));
+	assertNotEquals(identify(/a/), identify(/a/g));
+	assertNotEquals(identify(/a/gi), identify(/a/g));
+});
+
+// ~> Arrays
+
+Deno.test('arrays :: flat equality', () => {
 	assertEquals(identify([1, 2, 3]), identify([1, 2, 3]));
+});
+
+Deno.test('arrays :: empty', () => {
+	assertEquals(identify([]), identify([]));
+	assertNotEquals(identify([]), identify([0]));
 });
 
 Deno.test('arrays :: order is significant', () => {
@@ -23,62 +119,74 @@ Deno.test('arrays :: order is significant', () => {
 
 Deno.test('arrays :: nested', () => {
 	assertEquals(
-		identify([
-			[3, 2, 1],
-			[1, 2, 3],
-		]),
-		identify([
-			[3, 2, 1],
-			[1, 2, 3],
-		]),
+		identify([[3, 2, 1], [1, 2, 3]]),
+		identify([[3, 2, 1], [1, 2, 3]]),
+	);
+	assertNotEquals(
+		identify([[1], [2, 3]]),
+		identify([[1, 2], [3]]),
 	);
 });
 
 Deno.test('arrays :: circular', () => {
-	const arr = [1, 2, 3];
-	// @ts-expect-error circular
+	const arr: unknown[] = [1, 2, 3];
 	arr.push(arr);
 	assert(identify(arr));
-	assertEquals(identify(arr), 'a123~1');
 	assertEquals(identify(arr), identify(arr));
 });
 
-Deno.test('objects :: basic', () => {
+Deno.test('arrays :: undefined elements fold into null', () => {
+	assertEquals(identify([1, undefined, 2]), identify([1, null, 2]));
+});
+
+Deno.test('arrays :: adjacent elements keep their own slots', () => {
+	assertNotEquals(identify(['a', 'b']), identify(['ab']));
+});
+
+// ~> Objects
+
+Deno.test('objects :: basic equality', () => {
 	assertEquals(identify({ foo: 'bar' }), identify({ foo: 'bar' }));
 });
 
-Deno.test('objects :: key ordering', () => {
+Deno.test('objects :: empty', () => {
+	assertEquals(identify({}), identify({}));
+	assertEquals(identify({}), identify({ a: undefined }));
+});
+
+Deno.test('objects :: undefined values are dropped', () => {
+	assertEquals(
+		identify({ a: 1, c: undefined, b: 'hello' }),
+		identify({ a: 1, b: 'hello' }),
+	);
+});
+
+Deno.test('objects :: key order does not matter', () => {
 	assertEquals(
 		identify({ one: 'one', two: 'two' }),
 		identify({ two: 'two', one: 'one' }),
 	);
 });
 
-Deno.test('objects :: complex keys', () => {
-	const d = Date.now();
+Deno.test('objects :: numeric-like keys order independent', () => {
+	assertEquals(identify({ 10: 'a', 2: 'b' }), identify({ 2: 'b', 10: 'a' }));
+});
+
+Deno.test('objects :: nested, key order does not matter at any depth', () => {
 	assertEquals(
-		identify({ [123]: 'one', [d]: 'two' }),
-		identify({
-			[123]: 'one',
-			[d]: 'two',
-		}),
+		identify({ a: { b: 'c' }, d: { e: { f: 'g' } } }),
+		identify({ d: { e: { f: 'g' } }, a: { b: 'c' } }),
 	);
 });
 
-Deno.test('objects :: nested', () => {
-	assertEquals(
-		identify({ a: { b: 'c' }, d: { e: { f: 'g' } } }),
-		identify({
-			d: { e: { f: 'g' } },
-			a: { b: 'c' },
-		}),
-	);
+Deno.test('objects :: different values differ', () => {
+	assertNotEquals(identify({ a: 1, b: 2 }), identify({ a: 1, b: 3 }));
+	assertNotEquals(identify({ a: 1 }), identify({ a: 1, b: 2 }));
 });
 
 Deno.test('objects :: circular', () => {
-	const o = { a: 'b' };
-	// @ts-expect-error circular
-	o['c'] = o;
+	const o: Record<string, unknown> = { a: 'b' };
+	o.c = o;
 	assert(identify(o));
 	assertEquals(identify(o), identify(o));
 });
@@ -89,39 +197,40 @@ Deno.test('objects :: partial circular', () => {
 	assertEquals(identify(a), identify(a));
 });
 
-// Known limitation: cycle detection keys off object reference identity, so two
-// structurally-different cyclic shapes that share a referenced node can collapse
-// to the same identity. Left ignored until the circular-handling overhaul.
-Deno.test.ignore('objects :: with samey circular should not match', () => {
-	const o1: any = { a: 1, b: 2 };
-	const o2: any = { a: 1, b: 2 };
-	o1['c'] = o1;
-	o1['d'] = o2;
-
-	o2['c'] = o2; // 👈 #1
-
-	const a = identify(o1);
-
-	o2['c'] = o1; // 👈 different from #1
-
-	const b = identify(o1);
-
-	assertNotEquals(a, b, `${a} != ${b}`);
+Deno.test('objects :: class instances hash by their own keys', () => {
+	class Foo {
+		a = 1;
+		b = 2;
+	}
+	assertEquals(identify(new Foo()), identify(new Foo()));
+	assertEquals(identify(new Foo()), identify({ a: 1, b: 2 }));
 });
 
-Deno.test('objects :: same values between types shouldnt match', () => {
-	assertNotEquals(identify({ a: 'b' }), identify(['a', 'b']));
+Deno.test('objects :: null-prototype objects are supported', () => {
+	const nullProto = Object.assign(Object.create(null), { a: 1, b: 2 });
+	assertEquals(identify(nullProto), identify({ a: 1, b: 2 }));
 });
 
-Deno.test('objects :: same hash for Map or Object', () => {
-	assertEquals(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
+Deno.test('objects :: a literal "constructor" key still hashes', () => {
+	assertEquals(identify({ constructor: 1 }), identify({ constructor: 1 }));
+	assertNotEquals(identify({ constructor: 1 }), identify({ constructor: 2 }));
 });
+
+Deno.test('objects :: null object and null property', () => {
+	assertEquals(identify(null), identify(null));
+	assertEquals(identify({ f: null }), identify({ f: null }));
+	// A null value is distinct from a missing key.
+	assertNotEquals(identify({ f: null }), identify({}));
+});
+
+Deno.test('objects :: deterministic key sorting', () => {
+	assertEquals(identify({ b: 2, c: 3, a: 1 }), identify({ a: 1, b: 2, c: 3 }));
+});
+
+// ~> Sets
 
 Deno.test('sets :: order is significant', () => {
-	assertNotEquals(
-		identify(new Set([1, 2, 3])),
-		identify(new Set([3, 2, 1])),
-	);
+	assertNotEquals(identify(new Set([1, 2, 3])), identify(new Set([3, 2, 1])));
 });
 
 Deno.test('sets :: order is significant for object members', () => {
@@ -131,140 +240,119 @@ Deno.test('sets :: order is significant for object members', () => {
 	);
 });
 
+Deno.test('sets :: nested', () => {
+	assertEquals(
+		identify(new Set([new Set([1]), new Set([2])])),
+		identify(new Set([new Set([1]), new Set([2])])),
+	);
+});
+
 Deno.test('sets :: circular', () => {
-	const s = new Set([1, 2, 3]);
-	// @ts-expect-error circular
+	const s: Set<unknown> = new Set([1, 2, 3]);
 	s.add(s);
 	assert(identify(s));
 	assertEquals(identify(s), identify(s));
 });
 
-Deno.test('maps :: basic', () => {
+// ~> Maps
+
+Deno.test('maps :: key order does not matter', () => {
 	assertEquals(
-		identify(
-			new Map([
-				['a', 'b'],
-				['c', 'd'],
-			]),
-		),
-		identify(
-			new Map([
-				['c', 'd'],
-				['a', 'b'],
-			]),
-		),
+		identify(new Map([['a', 'b'], ['c', 'd']])),
+		identify(new Map([['c', 'd'], ['a', 'b']])),
+	);
+});
+
+Deno.test('maps :: single entry (fast path) is stable', () => {
+	assertEquals(identify(new Map([['z', 1]])), identify(new Map([['z', 1]])));
+});
+
+Deno.test('maps :: mixed key types, order independent', () => {
+	assertEquals(
+		identify(new Map<unknown, unknown>([['a', 1], [2, 'b'], ['c', 3]])),
+		identify(new Map<unknown, unknown>([[2, 'b'], ['c', 3], ['a', 1]])),
+	);
+});
+
+Deno.test('maps :: different values differ', () => {
+	assertNotEquals(
+		identify(new Map([['a', 1]])),
+		identify(new Map([['a', 2]])),
 	);
 });
 
 Deno.test('maps :: circular', () => {
-	const m = new Map([
-		['a', 'b'],
-		['c', 'd'],
-	]);
-	// @ts-expect-error circular
+	const m: Map<string, unknown> = new Map([['a', 'b'], ['c', 'd']]);
 	m.set('e', m);
 	assert(identify(m));
 	assertEquals(identify(m), identify(m));
 });
 
-Deno.test('values :: primitives', () => {
-	const t = (v: any) =>
-		assertEquals(
-			identify(v),
-			identify(v),
-			`Value ${v} should have hashed correctly.`,
-		);
+// ~> Cross-type behaviour
 
-	t('test');
-	t(new Date());
-	t(NaN);
-	t(true);
-	t(false);
-	t(/test/);
-	t(123);
-	t(null);
-	t(undefined);
+Deno.test('cross-type :: a Map matches the equivalent plain object', () => {
+	assertEquals(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
+	assertEquals(
+		identify({ a: 1, b: 2 }),
+		identify(new Map<string, number>([['a', 1], ['b', 2]])),
+	);
 });
 
-Deno.test('values :: throws on unsupported builtins', () => {
-	assertThrows(() => identify(new WeakMap()));
-	assertThrows(() => identify(Promise.resolve()));
-	assertThrows(() => identify(new Uint8Array([1, 2, 3])));
+Deno.test('cross-type :: objects and arrays are distinct', () => {
+	assertNotEquals(identify({ a: 'b' }), identify(['a', 'b']));
+	assertNotEquals(identify({}), identify([]));
 });
 
-Deno.test('values :: hashes plain-shaped objects', () => {
-	class Foo {
-		a = 1;
-		b = 2;
-	}
-	assertEquals(identify(new Foo()), identify(new Foo()));
-	assertEquals(identify(new Foo()), identify({ a: 1, b: 2 }));
-
-	const nullProto = Object.assign(Object.create(null), { a: 1, b: 2 });
-	assertEquals(identify(nullProto), identify({ a: 1, b: 2 }));
-
-	// A literal `constructor` key must still hash, not throw.
-	assertEquals(identify({ constructor: 1 }), identify({ constructor: 1 }));
+Deno.test('cross-type :: a Set is distinct from an Array', () => {
+	assertNotEquals(identify(new Set([1, 2, 3])), identify([1, 2, 3]));
 });
 
-Deno.test('values :: circular ref should be consistent', () => {
-	let o: any = { a: 1, c: 2 };
+Deno.test('cross-type :: a typed array matches the equivalent index-keyed object', () => {
+	assertEquals(identify(new Uint8Array([1, 2])), identify({ 0: 1, 1: 2 }));
+	assertEquals(identify(new Uint8Array([])), identify({}));
+	assertEquals(identify(new Uint8Array([1, 2])), identify(new Int16Array([1, 2])));
+});
+
+// ~> Circular & shared references
+
+Deno.test('refs :: circular ids are consistent regardless of visitation order', () => {
+	let o: Record<string, unknown> = { a: 1, c: 2 };
 	o.b = o;
 	o.d = new Map(); // the map is seen 2nd
-	o.d.set('x', o.d);
-
+	(o.d as Map<string, unknown>).set('x', o.d);
 	assertEquals(Object.keys(o), ['a', 'c', 'b', 'd']);
-
 	const a = identify(o);
 
 	o = { a: 1 };
 	o.d = new Map(); // the map is seen first
-	o.d.set('x', o.d);
+	(o.d as Map<string, unknown>).set('x', o.d);
 	o.b = o;
 	o.c = 2;
-
 	assertEquals(Object.keys(o), ['a', 'd', 'b', 'c']);
-
 	const b = identify(o);
 
-	// the circular ref should be the same
 	assertEquals(a, b, `${a} === ${b}`);
 });
 
-Deno.test('values :: circular deeply nested objects should equal', () => {
-	const o1: any = {
-		b: {
-			c: 123,
-		},
+Deno.test('refs :: deeply nested circular objects are equal', () => {
+	const build = () => {
+		const o: Record<string, any> = { b: { c: 123 } };
+		o.b.d = o;
+		o.x = [9, o.b];
+		return o;
 	};
-
-	o1.b.d = o1;
-	o1.x = [9, o1.b];
-
-	const o2: any = {
-		b: {
-			c: 123,
-		},
-	};
-
-	o2.b.d = o2;
-	o2.x = [9, o2.b];
-	const a = identify(o1);
-	const b = identify(o2);
-	assertEquals(a, b, `${a} === ${b}`);
+	assertEquals(identify(build()), identify(build()));
 });
 
-Deno.test('values :: all elements visited', () => {
-	const c = [1];
-	// @ts-expect-error circular
-	c.push(c);
-	const hash = identify({
-		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
-	});
-	assertEquals(hash, 'oaobacadoefa1~5g');
+Deno.test('refs :: a shared reference equals two distinct equal instances', () => {
+	const shared = { v: 1 };
+	assertEquals(
+		identify({ x: shared, y: shared }),
+		identify({ x: { v: 1 }, y: { v: 1 } }),
+	);
 });
 
-Deno.test('values :: should only be seen once', () => {
+Deno.test('refs :: each distinct node is only back-referenced when reused', () => {
 	const hash = identify({
 		a: [[1], [2], [3]],
 		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
@@ -272,17 +360,109 @@ Deno.test('values :: should only be seen once', () => {
 	assertNotMatch(hash, /~\d+/);
 });
 
-Deno.test('objects :: shared (non-circular) references are stable', () => {
-	const shared = { v: 1 };
-	// Sharing one instance must hash the same as two distinct equal instances.
+Deno.test('refs :: circular reference to root', () => {
+	const o: any = { id: 123 };
+	o.self = o;
+	assert(identify(o));
+	assertEquals(identify(o), identify(o));
+});
+
+Deno.test('refs :: nested circular reference to root', () => {
+	// A back-reference buried under a node, plus an awkward string to escape.
+	const o: any = { label: 'a\n\t"b' };
+	o.inner = { root: o };
+	assertEquals(identify(o), identify(o));
+});
+
+Deno.test('refs :: child circular reference', () => {
+	const o: any = { id: 1, child: { id: 2 } };
+	o.child.self = o.child;
+	assertEquals(identify(o), identify(o));
+});
+
+Deno.test('refs :: nested child circular reference', () => {
+	const o: any = { id: 1, child: { id: 2 } };
+	o.child.wrap = { ref: o.child };
+	assertEquals(identify(o), identify(o));
+});
+
+Deno.test('refs :: circular objects in an array', () => {
+	const o: any = { id: 123 };
+	o.list = [o, o];
+	assertEquals(identify(o), identify(o));
+});
+
+Deno.test('refs :: nested circular references in an array', () => {
+	const build = () => {
+		const o: any = { items: [{ foo: 1 }, { bar: 2 }] };
+		o.items[0].self = o.items[0];
+		o.items[1].self = o.items[1];
+		return o;
+	};
+	assertEquals(identify(build()), identify(build()));
+});
+
+Deno.test('refs :: circular arrays', () => {
+	const fixture: any = [];
+	fixture.push(fixture, fixture);
+	assert(identify(fixture));
+	assertEquals(identify(fixture), identify(fixture));
+});
+
+Deno.test('refs :: nested circular arrays', () => {
+	const build = () => {
+		const arr: any = [];
+		arr.push({ foo: 1, back: arr }, { bar: 2, back: arr });
+		return arr;
+	};
+	assertEquals(identify(build()), identify(build()));
+});
+
+Deno.test('refs :: repeated non-circular references in objects', () => {
+	// One shared node behind three keys hashes like three separate equal nodes.
+	const shared = { foo: 1, bar: 'abc' };
 	assertEquals(
-		identify({ x: shared, y: shared }),
-		identify({ x: { v: 1 }, y: { v: 1 } }),
+		identify({ a: shared, b: shared, c: shared }),
+		identify({
+			a: { foo: 1, bar: 'abc' },
+			b: { foo: 1, bar: 'abc' },
+			c: { foo: 1, bar: 'abc' },
+		}),
 	);
 });
 
-Deno.test('objects :: deeply nested input does not overflow', () => {
-	let root: any = {};
+Deno.test('refs :: repeated non-circular references in arrays', () => {
+	const shared = { foo: 1 };
+	assertEquals(
+		identify([shared, shared]),
+		identify([{ foo: 1 }, { foo: 1 }]),
+	);
+});
+
+// ~> On-the-wire format
+//
+// These lock the exact serialization. A change here is a breaking change to every
+// previously-stored identity, so update deliberately.
+
+Deno.test('format :: circular array back-reference', () => {
+	const arr: unknown[] = [1, 2, 3];
+	arr.push(arr);
+	assertEquals(identify(arr), 'an1n2n3~1');
+});
+
+Deno.test('format :: every element is visited exactly once', () => {
+	const c: unknown[] = [1];
+	c.push(c);
+	const hash = identify({
+		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
+	});
+	assertEquals(hash, 'oaobascesdoesfan1~5sg');
+});
+
+// ~> Robustness
+
+Deno.test('robustness :: very deep input does not overflow', () => {
+	let root: Record<string, any> = {};
 	let node = root;
 	for (let i = 0; i < 1000; i++) {
 		node.i = i;
@@ -293,28 +473,44 @@ Deno.test('objects :: deeply nested input does not overflow', () => {
 	assertEquals(identify(root), identify(root));
 });
 
-Deno.test('objects :: realistic payload, key order never matters', () => {
-	assertEquals(
-		identify({
-			id: 12345,
-			name: 'a product',
-			tags: ['a', 'b', 'c'],
-			meta: { created: '2024-01-01', active: true, count: 42 },
-		}),
-		identify({
-			meta: { count: 42, active: true, created: '2024-01-01' },
-			tags: ['a', 'b', 'c'],
-			name: 'a product',
-			id: 12345,
-		}),
-	);
+Deno.test('robustness :: unsupported builtins throw', () => {
+	assertThrows(() => identify(new WeakMap()));
+	assertThrows(() => identify(new WeakSet()));
+	assertThrows(() => identify(Promise.resolve()));
+	assertThrows(() => identify(new ArrayBuffer(8)));
 });
 
-Deno.test('maps :: mixed key types, order independent', () => {
-	assertEquals(
-		identify(new Map<unknown, unknown>([['a', 1], [2, 'b'], ['c', 3]])),
-		identify(new Map<unknown, unknown>([[2, 'b'], ['c', 3], ['a', 1]])),
-	);
+Deno.test('robustness :: does not mutate the input', () => {
+	const child: any = { foo: 1 };
+	child.self = child;
+	const o: any = { a: child, b: child };
+	identify(o);
+	assertEquals(Object.keys(o), ['a', 'b']);
+	assert(o.a === child);
+	assert(o.b === child);
+	assert(child.self === child);
+});
+
+Deno.test('robustness :: hashing never pollutes Object.prototype', () => {
+	identify(JSON.parse('{"__proto__":{"polluted":true}}'));
+	identify(JSON.parse('{"constructor":{"prototype":{"polluted":true}}}'));
+	assertEquals(({} as Record<string, unknown>).polluted, undefined);
+});
+
+// ~> Known limitation
+
+// Cycle detection keys off object reference identity, so two structurally-different
+// cyclic shapes that share a referenced node can collapse to the same identity.
+Deno.test.ignore('limitation :: samey circular shapes should not match', () => {
+	const o1: any = { a: 1, b: 2 };
+	const o2: any = { a: 1, b: 2 };
+	o1.c = o1;
+	o1.d = o2;
+	o2.c = o2;
+	const a = identify(o1);
+	o2.c = o1;
+	const b = identify(o1);
+	assertNotEquals(a, b, `${a} != ${b}`);
 });
 
 // ~> Property based tests
@@ -361,7 +557,7 @@ function reorder(v: any): any {
 	return o;
 }
 
-Deno.test('fuzz :: identify is deterministic', () => {
+Deno.test('fuzz :: identify always returns a string and is idempotent', () => {
 	fc.assert(
 		fc.property(jsonish, (v) => {
 			const hash = identify(v);
@@ -375,5 +571,37 @@ Deno.test('fuzz :: object & map key order is irrelevant', () => {
 	fc.assert(
 		fc.property(jsonish, (v) => identify(v) === identify(reorder(v))),
 		{ numRuns: 1000 },
+	);
+});
+
+Deno.test('fuzz :: an object and the equivalent Map share an identity', () => {
+	const flatObj = fc.dictionary(keyArb, leafArb, { maxKeys: 6 });
+	fc.assert(
+		fc.property(flatObj, (o) => {
+			const asMap = new Map(Object.entries(o));
+			return identify(o) === identify(asMap);
+		}),
+		{ numRuns: 500 },
+	);
+});
+
+Deno.test('fuzz :: reversing a distinct-element array changes the identity', () => {
+	// Distinct integers have distinct identities, so a length >= 2 reversal differs.
+	const distinct = fc.uniqueArray(fc.integer(), { minLength: 2, maxLength: 8 });
+	fc.assert(
+		fc.property(distinct, (xs) => identify(xs) !== identify([...xs].reverse())),
+		{ numRuns: 500 },
+	);
+});
+
+Deno.test('fuzz :: adding a defined key changes the identity', () => {
+	const flatObj = fc.dictionary(keyArb, leafArb, { maxKeys: 5 });
+	fc.assert(
+		fc.property(flatObj, fc.string({ minLength: 1 }), leafArb, (o, k, v) => {
+			if (k in o || v === undefined) return true; // a dropped/undefined value is a no-op
+			const before = identify(o);
+			return before !== identify({ ...o, [k]: v });
+		}),
+		{ numRuns: 500 },
 	);
 });
