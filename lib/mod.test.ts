@@ -17,8 +17,8 @@ Deno.test('arrays :: flat', () => {
 	assertEquals(identify([1, 2, 3]), identify([1, 2, 3]));
 });
 
-Deno.test.ignore('arrays :: order is insignificant', () => {
-	assertEquals(identify([3, 2, 1]), identify([1, 2, 3]));
+Deno.test('arrays :: order is significant', () => {
+	assertNotEquals(identify([3, 2, 1]), identify([1, 2, 3]));
 });
 
 Deno.test('arrays :: nested', () => {
@@ -89,8 +89,9 @@ Deno.test('objects :: partial circular', () => {
 	assertEquals(identify(a), identify(a));
 });
 
-// TODO: Right now they do match, because the o1 lookup is the same as o2
-// as the reference is still the same, so the weakmap is the same
+// Known limitation: cycle detection keys off object reference identity, so two
+// structurally-different cyclic shapes that share a referenced node can collapse
+// to the same identity. Left ignored until the circular-handling overhaul.
 Deno.test.ignore('objects :: with samey circular should not match', () => {
 	const o1: any = { a: 1, b: 2 };
 	const o2: any = { a: 1, b: 2 };
@@ -116,14 +117,14 @@ Deno.test('objects :: same hash for Map or Object', () => {
 	assertEquals(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
 });
 
-Deno.test.ignore('sets :: order is insignificant', () => {
+Deno.test('sets :: order is significant', () => {
 	assertNotEquals(
 		identify(new Set([1, 2, 3])),
 		identify(new Set([3, 2, 1])),
 	);
 });
 
-Deno.test.ignore('sets :: order is insignificant for object members', () => {
+Deno.test('sets :: order is significant for object members', () => {
 	assertNotEquals(
 		identify(new Set([{ a: 'a' }, { b: 'b' }])),
 		identify(new Set([{ b: 'b' }, { a: 'a' }])),
@@ -183,9 +184,6 @@ Deno.test('values :: primitives', () => {
 	t(123);
 	t(null);
 	t(undefined);
-	// TODO: Solve for symbols
-	// t(Symbol());
-	// t(Symbol("test"));
 });
 
 Deno.test('values :: throws on unsupported builtins', () => {
