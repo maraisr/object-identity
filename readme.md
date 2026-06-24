@@ -6,7 +6,8 @@
 
 </samp>
 
-**A utility that provides a stable identity of an object**
+**A tiny, fast utility that canonicalizes any value into a stable identity, so structurally-equal
+inputs match regardless of key order.**
 
 <br>
 <br>
@@ -22,31 +23,44 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 
 </div>
 
+`identify` turns any JSON-like value into a short, stable string. The same _shape_ always produces
+the same string, with keys in any order and a plain object treated the same as an equivalent `Map`.
+That makes it useful as a cache key, or for deduping structurally-equal values.
+
 ## ⚡ Features
 
-- ✅ **Intuitive**
-- 🌪 **Recursive/Circular support**
-- 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — around 436 B minified and gzipped, with no
+- 🧬 **Canonical.** The same shape always produces the same id.
+- 🌀 **Deep and cycle-safe.** Handles nested objects, arrays, sets, maps, and circular references.
+- 🏎 **Fast.** See the [benchmarks](#-benchmark).
+- 🪶 **Tiny.** Around 436 B minified and gzipped, with zero
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
+
+> **Behavior:**
+>
+> - key order within objects and maps doesn't matter
+> - element order within arrays and sets does
+> - a plain object and a `Map` with the same entries share one identity
+> - cycles are handled; exotic builtins (typed arrays, promises, …) throw
 
 ## ⚙️ Install
 
-- **npm** — available as [`object-identity`](https://www.npmjs.com/package/object-identity)
-- **JSR** — available as [`@mr/object-identity`](https://jsr.io/@mr/object-identity)
+- **npm** is available as [`object-identity`](https://www.npmjs.com/package/object-identity)
+- **JSR** is available as [`@mr/object-identity`](https://jsr.io/@mr/object-identity)
 
 ## 🚀 Usage
 
 ```ts
 import { identify } from 'object-identity';
 
-// ~> identity the object
-const id1 = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
-// ~> an entirely different object, but structurally the same
-const id2 = identify({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
+// same shape, different key order, same id
+identify({ a: 1, b: 2 }) === identify({ b: 2, a: 1 }); // true
 
-// they should equal
-assert.toEqual(hashA, hashB);
+// a plain object and an equivalent Map produce the same id
+identify({ a: 'b' }) === identify(new Map([['a', 'b']])); // true
+
+// nesting, Sets, Dates, and RegExps are all supported.
+// use it as a cache key, or a dedupe signal
+const key = identify({ user: 7, filters: new Set(['active', 'new']) });
 ```
 
 ## 💨 Benchmark
@@ -66,9 +80,8 @@ summary
     12.02x faster than object-hash
 ```
 
-> ^ `object-identity` is not as feature-full it's alternatives, specifically around `function`
-> values and other node builtins. So take this benchmark with a grain of salt, as it's only testing
-> "json-like" payloads.
+> ^ `object-identity` only handles JSON-like data by design. It won't fingerprint functions or every
+> Node builtin the way some alternatives do, so these numbers only reflect the payloads it targets.
 
 ## License
 

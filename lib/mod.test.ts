@@ -18,7 +18,7 @@ Deno.test('arrays :: flat', () => {
 });
 
 Deno.test('arrays :: order is significant', () => {
-	// Arrays are sequences — unlike objects/maps, their elements are never sorted.
+	// Arrays are sequences, and unlike objects or maps their elements are never sorted.
 	assertNotEquals(identify([3, 2, 1]), identify([1, 2, 3]));
 });
 

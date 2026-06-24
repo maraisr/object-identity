@@ -32,7 +32,7 @@ function walk(input: any, seen: any[], depth: number): string {
 	} else if (input[Symbol.toStringTag] === undefined) {
 		// Plain objects, class instances and null-prototype objects have no
 		// `Symbol.toStringTag`; exotic builtins (Promise, typed arrays, WeakMap,
-		// ArrayBuffer, …) do — so this both selects key-walkable objects and
+		// ArrayBuffer, …) do, so this both selects key-walkable objects and
 		// rejects the unsupported ones below, without a costly `toString.call`.
 		out = 'o';
 		keys = Object.keys(input);
@@ -51,15 +51,17 @@ function walk(input: any, seen: any[], depth: number): string {
 }
 
 /**
- * Creates a shape equivalent identifier for an input object.
- * This is useful for comparing objects, where keys could be provided in any order.
+ * Canonicalize a value into a stable identity string. Two structurally-equal
+ * inputs return the same id, regardless of key order. Use it as a cache key, or
+ * to deduplicate structurally-equal values.
+ *
+ * Objects and `Map`s compare by key (order-independent); arrays and `Set`s keep
+ * their order. Cycles are handled; exotic builtins (typed arrays, promises,
+ * weakmaps, …) throw.
  *
  * @example
  * ```ts
- * const obj = { a: 1, b: 2 };
- * const obj2 = { b: 2, a: 1 };
- *
- * console.log(identify(obj) === identify(obj2)); // true
+ * identify({ a: 1, b: 2 }) === identify({ b: 2, a: 1 }); // true
  * ```
  */
 export function identify<T>(input: T): string {

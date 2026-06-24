@@ -48,7 +48,7 @@ async function transform(name: string, filename: string) {
 
 	// We ship the readable ESM above; downstream bundlers minify it, so the
 	// minified + gzipped size is the number that actually ships to users.
-	// Measure and report it — this minified output is never written to disk.
+	// Measure and report it. This minified output is never written to disk.
 	// Cue from @lukeed https://github.com/lukeed/empathic/blob/main/scripts/build.ts
 	let min = minify(`${name}.mjs`, xform.code, { mangle: { toplevel: true } });
 	if (!min.code) bail('minify', ['produced no output']);
