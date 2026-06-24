@@ -1,151 +1,134 @@
 // deno-lint-ignore-file no-import-prefix
 
-import objectHash from 'npm:object-hash@^3.0';
-import { serialize as ohashSerialize } from 'npm:ohash@^2.0';
-import { objectStringify as liqdObjectStringify } from 'npm:@liqd-js/fast-object-hash@^2.0';
-import { hash as hashIt } from 'npm:hash-it@^7.0';
-import jsonStableStringify from 'npm:json-stable-stringify@^1.3';
-import fastJsonStableStringify from 'npm:fast-json-stable-stringify@^2.1';
-import { stringify as tinyStableStringify } from 'npm:tiny-stable-stringify@^0.1';
-import safeStableStringify from 'npm:safe-stable-stringify@^2.5';
-import jsonStringifyDeterministic from 'npm:json-stringify-deterministic@^1.0';
-import jsonStableStringifyWithoutJsonify from 'npm:json-stable-stringify-without-jsonify@^1.0';
-import emeraldJsonStableStringify from 'npm:@emeraldsquad/json-stable-stringify@^1.0';
-import fasterStableStringify from 'npm:faster-stable-stringify@^1.0';
-import canonicalize from 'npm:canonicalize@^3.0';
-import { canonicalize as jsonCanonicalize } from 'npm:json-canonicalize@^2.0';
-import canonicalJson from 'npm:canonical-json@^0.4';
-import { canonicalize as tufCanonicalize } from 'npm:@tufjs/canonical-json@^2.0';
+const scenarios: Record<string, () => unknown> = {
+	simple() {
+		return {
+			id: 1234,
+			name: 'object-identity',
+			active: true,
+			score: 98.6,
+			tags: ['canonical', 'stable', 'fast'],
+			meta: {
+				created: 1_700_000_000_000,
+				version: '0.1.2',
+				nested: { a: 1, b: 2, c: 3 },
+			},
+			items: [
+				{ k: 'one', v: 1 },
+				{ k: 'two', v: 2 },
+				{ k: 'three', v: 3 },
+			],
+		};
+	},
 
-import { identify } from './mod.ts';
+	deep() {
+		let node: any = { leaf: true, value: 0 };
+		for (let i = 0; i < 32; i++) {
+			node = { depth: i, label: 'node-' + i, sibling: [i, i + 1], child: node };
+		}
+		return node;
+	},
 
-function get_object() {
-	const c = [1];
-	// @ts-expect-error circular
-	c.push(c);
-	return {
-		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
-		d: new Date(),
-		r: /a/,
-	};
+	'deep circular'() {
+		const root: any = { id: 'root' };
+		let node: any = root;
+		for (let i = 0; i < 32; i++) {
+			node.next = { depth: i, root };
+			node = node.next;
+		}
+		node.next = root;
+		return root;
+	},
+
+	big() {
+		const out: Record<string, unknown> = {};
+		for (let i = 0; i < 256; i++) {
+			out['key_' + i] = { i, label: 'item-' + i, on: i % 2 === 0, tags: ['a', 'b', 'c'] };
+		}
+		return out;
+	},
+
+	leafy() {
+		const out: unknown[] = [];
+		for (let i = 0; i < 512; i++) out.push(i, 'str-' + i, i % 3 === 0, null);
+		return out;
+	},
+};
+
+const candidates: Record<string, {
+	lib: () => Promise<any>;
+	run: (mod: any, value: any) => unknown;
+}> = {
+	'object-identity': {
+		lib: () => import('./mod.ts'),
+		run: (m, o) => m.identify(o),
+	},
+	'safe-stable-stringify': {
+		lib: () => import('npm:safe-stable-stringify@^2.5'),
+		run: (m, o) => m.default(o),
+	},
+	ohash: {
+		lib: () => import('npm:ohash@^2.0'),
+		run: (m, o) => m.serialize(o),
+	},
+	'object-hash': {
+		lib: () => import('npm:object-hash@^3.0'),
+		run: (m, o) => m.default(o, { algorithm: 'passthrough' }),
+	},
+	'hash-it †': {
+		lib: () => import('npm:hash-it@^7.0'),
+		run: (m, o) => m.hash(o),
+	},
+	'json-stable-stringify': {
+		lib: () => import('npm:json-stable-stringify@^1.3'),
+		run: (m, o) => m.default(o),
+	},
+	'fast-json-stable-stringify': {
+		lib: () => import('npm:fast-json-stable-stringify@^2.1'),
+		run: (m, o) => m.default(o),
+	},
+	'tiny-stable-stringify': {
+		lib: () => import('npm:tiny-stable-stringify@^0.1'),
+		run: (m, o) => m.stringify(o),
+	},
+	'json-stringify-deterministic': {
+		lib: () => import('npm:json-stringify-deterministic@^1.0'),
+		run: (m, o) => m.default(o),
+	},
+	'json-stable-stringify-without-jsonify': {
+		lib: () => import('npm:json-stable-stringify-without-jsonify@^1.0'),
+		run: (m, o) => m.default(o),
+	},
+	canonicalize: {
+		lib: () => import('npm:canonicalize@^3.0'),
+		run: (m, o) => m.default(o),
+	},
+	'@tufjs/canonical-json': {
+		lib: () => import('npm:@tufjs/canonical-json@^2.0'),
+		run: (m, o) => m.canonicalize(o),
+	},
+};
+
+const mods: Record<string, any> = {};
+for (const [name, c] of Object.entries(candidates)) mods[name] = await c.lib();
+
+const fixtures = Object.entries(scenarios).map(([name, make]) => [name, make()] as const);
+
+for (const [scenario, value] of fixtures) {
+	for (const [name, c] of Object.entries(candidates)) {
+		// Validate up front: a throw (can't handle the shape) or non-deterministic
+		// output marks the bench ignored, so it's skipped instead of measured.
+		let valid = false;
+		try {
+			valid = c.run(mods[name], value) === c.run(mods[name], value);
+		} catch { /* leaves valid false -> ignored */ }
+
+		Deno.bench({
+			name,
+			group: scenario,
+			baseline: name === 'object-identity',
+			ignore: !valid,
+			fn: () => void c.run(mods[name], value),
+		});
+	}
 }
-
-Deno.bench({
-	name: 'object-identity',
-	baseline: true,
-	fn() {
-		let _ = identify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'object-hash',
-	fn() {
-		let _ = objectHash(get_object(), { algorithm: 'passthrough' });
-	},
-});
-
-Deno.bench({
-	name: 'ohash',
-	fn() {
-		let _ = ohashSerialize(get_object());
-	},
-});
-
-Deno.bench({
-	name: '@liqd-js/fast-object-hash',
-	fn() {
-		let _ = liqdObjectStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'hash-it †',
-	fn() {
-		let _ = hashIt(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'json-stable-stringify',
-	fn() {
-		let _ = jsonStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'fast-json-stable-stringify',
-	fn() {
-		let _ = fastJsonStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'faster-stable-stringify',
-	fn() {
-		let _ = fasterStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'tiny-stable-stringify',
-	fn() {
-		let _ = tinyStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'safe-stable-stringify',
-	fn() {
-		let _ = safeStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'json-stringify-deterministic',
-	fn() {
-		let _ = jsonStringifyDeterministic(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'json-stable-stringify-without-jsonify',
-	fn() {
-		let _ = jsonStableStringifyWithoutJsonify(get_object());
-	},
-});
-
-Deno.bench({
-	name: '@emeraldsquad/json-stable-stringify',
-	fn() {
-		let _ = emeraldJsonStableStringify(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'canonicalize',
-	fn() {
-		let _ = canonicalize(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'json-canonicalize',
-	fn() {
-		let _ = jsonCanonicalize(get_object());
-	},
-});
-
-Deno.bench({
-	name: 'canonical-json',
-	fn() {
-		let _ = canonicalJson(get_object());
-	},
-});
-
-Deno.bench({
-	name: '@tufjs/canonical-json',
-	fn() {
-		let _ = tufCanonicalize(get_object());
-	},
-});

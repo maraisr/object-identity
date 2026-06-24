@@ -3,7 +3,8 @@
 	"name": "@mr/object-identity",
 	"exports": "./lib/mod.ts",
 	"tasks": {
-		"build": "deno run -A scripts/build.ts"
+		"build": "deno run -A scripts/build.ts",
+		"bench": "deno run -A scripts/bench.ts"
 	},
 	"imports": {
 		"@std/assert": "jsr:@std/assert@^1",
