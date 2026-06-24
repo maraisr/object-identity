@@ -1,6 +1,7 @@
 {
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"name": "@mr/object-identity",
+	"license": "MIT",
 	"exports": "./lib/mod.ts",
 	"tasks": {
 		"build": "deno run -A scripts/build.ts",
