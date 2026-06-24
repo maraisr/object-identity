@@ -1,6 +1,8 @@
-import objectHash from 'npm:object-hash';
-import jsonStableStringify from 'npm:json-stable-stringify';
-import { stringify as tinyStableStringify } from 'npm:tiny-stable-stringify';
+// deno-lint-ignore-file no-import-prefix
+
+import objectHash from 'npm:object-hash@^3.0';
+import jsonStableStringify from 'npm:json-stable-stringify@^1.3';
+import { stringify as tinyStableStringify } from 'npm:tiny-stable-stringify@^0.1';
 
 import { identify } from './mod.ts';
 

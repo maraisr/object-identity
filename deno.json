@@ -9,6 +9,7 @@
 		"@std/assert": "jsr:@std/assert@^1",
 		"@std/path": "jsr:@std/path@^1"
 	},
+	"nodeModulesDir": "auto",
 	"lock": false,
 	"lint": {
 		"rules": {
