@@ -41,7 +41,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: deno task build
-      - run: npm publish --dry-run
+      - run: |
+          npm version patch
+          npm stage publish --dry-run
         working-directory: npm
       - run: deno publish --no-check --dry-run
 
