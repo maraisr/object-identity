@@ -11,6 +11,7 @@
 		"fast-check": "npm:fast-check@^4"
 	},
 	"nodeModulesDir": "auto",
+	"minimumDependencyAge": "P3D",
 	"lock": false,
 	"lint": {
 		"rules": {
