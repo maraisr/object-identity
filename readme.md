@@ -6,7 +6,8 @@
 
 </samp>
 
-**A utility that provides a stable identity of an object**
+**A tiny, fast utility that canonicalizes any value into a stable identity, for structurally
+equality.**
 
 <br>
 <br>
@@ -24,10 +25,10 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 
 ## ⚡ Features
 
-- ✅ **Intuitive**
-- 🌪 **Recursive/Circular support**
-- 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — a mere 387B and no
+- 🧬 **Canonical.** The same shape always produces the same id.
+- 🌀 **Deep and cycle-safe.** Handles nested objects, arrays, sets, maps, and circular references.
+- 🏎 **Fast.** See the [benchmarks](#-benchmark).
+- 🪶 **Tiny.** Around 436B minified and gzipped, with zero
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## ⚙️ Install
@@ -40,13 +41,14 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 ```ts
 import { identify } from 'object-identity';
 
-// ~> identity the object
-const id1 = identify({ a: new Set(['b', 'c', new Map([['d', 'e']])]) });
-// ~> an entirely different object, but structurally the same
-const id2 = identify({ a: new Set(['b', 'c', new Map([['e', 'e']])]) });
+// same shape, different key order, same id
+identify({ a: 1, b: 2 }) === identify({ b: 2, a: 1 }); // true
 
-// they should equal
-assert.toEqual(hashA, hashB);
+// a plain object and an equivalent Map produce the same id
+identify({ a: 'b' }) === identify(new Map([['a', 'b']])); // true
+
+// nesting, Sets, Dates, and RegExps are all supported
+const key = identify({ user: 7, filters: new Set(['active', 'new']) });
 ```
 
 ## 💨 Benchmark
