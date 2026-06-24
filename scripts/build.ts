@@ -8,7 +8,8 @@
 //   $ git push origin main --tags
 //   #-> CI builds w/ publish
 
-import oxc from 'npm:oxc-transform@^0.30';
+import oxc from 'oxc-transform';
+import { minify } from 'oxc-minify';
 import { join, resolve } from '@std/path';
 
 import denoJson from '../deno.json' with { type: 'json' };
@@ -44,6 +45,19 @@ async function transform(name: string, filename: string) {
 	outfile = `${outdir}/${name}.mjs`;
 	console.log('> writing "%s" file', outfile);
 	await Deno.writeTextFile(outfile, xform.code);
+
+	// We ship the readable ESM above; downstream bundlers minify it, so the
+	// minified + gzipped size is the number that actually ships to users.
+	// Measure and report it — this minified output is never written to disk.
+	// Cue from @lukeed https://github.com/lukeed/empathic/blob/main/scripts/build.ts
+	let min = minify(`${name}.mjs`, xform.code, { mangle: { toplevel: true } });
+	if (!min.code) bail('minify', ['produced no output']);
+	console.log(
+		'::notice::%s is %d b minified, %d b min+gzip',
+		`${name}.mjs`,
+		utf8(min.code),
+		await gzipSize(min.code),
+	);
 }
 
 if (exists(outdir)) {
@@ -63,6 +77,17 @@ await copy('license');
 function bail(label: string, errors: string[]): never {
 	console.error('[%s] error(s)\n', label, errors.join(''));
 	Deno.exit(1);
+}
+
+function utf8(text: string): number {
+	return new TextEncoder().encode(text).length;
+}
+
+async function gzipSize(text: string): Promise<number> {
+	let stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+	let size = 0;
+	for await (let chunk of stream) size += chunk.length;
+	return size;
 }
 
 function exists(path: string) {

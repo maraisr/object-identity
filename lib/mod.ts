@@ -29,9 +29,11 @@ function walk(input: any, seen: any[], depth: number): string {
 		} else {
 			for (keys of input) out += keys[0] + walk(keys[1], seen, depth);
 		}
-	} else if (
-		input.constructor === Object || Object.prototype.toString.call(input) === '[object Object]'
-	) {
+	} else if (input[Symbol.toStringTag] === undefined) {
+		// Plain objects, class instances and null-prototype objects have no
+		// `Symbol.toStringTag`; exotic builtins (Promise, typed arrays, WeakMap,
+		// ArrayBuffer, …) do — so this both selects key-walkable objects and
+		// rejects the unsupported ones below, without a costly `toString.call`.
 		out = 'o';
 		keys = Object.keys(input);
 		if (keys.length === 1) {
@@ -41,7 +43,7 @@ function walk(input: any, seen: any[], depth: number): string {
 			for (; i < keys.length; out += keys[i] + walk(input[keys[i++]], seen, depth));
 		}
 	} else {
-		throw new Error(`Unsupported value ${input}`);
+		throw new Error('Unsupported value');
 	}
 
 	seen[ref] = out;

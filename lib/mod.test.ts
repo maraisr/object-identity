@@ -4,6 +4,7 @@ import {
 	assertInstanceOf,
 	assertNotEquals,
 	assertNotMatch,
+	assertThrows,
 } from '@std/assert';
 import { identify } from '../lib/mod.ts';
 
@@ -184,6 +185,31 @@ Deno.test('values :: primitives', () => {
 	// TODO: Solve for symbols
 	// t(Symbol());
 	// t(Symbol("test"));
+});
+
+Deno.test('values :: throws on unsupported builtins', () => {
+	// Exotic builtins carry a `Symbol.toStringTag` and cannot be meaningfully
+	// fingerprinted, so they are rejected rather than silently collapsed.
+	assertThrows(() => identify(new WeakMap()));
+	assertThrows(() => identify(Promise.resolve()));
+	assertThrows(() => identify(new Uint8Array([1, 2, 3])));
+});
+
+Deno.test('values :: hashes plain-shaped objects', () => {
+	// Class instances and null-prototype objects have no `Symbol.toStringTag`,
+	// so they hash by their enumerable own keys like any plain object.
+	class Foo {
+		a = 1;
+		b = 2;
+	}
+	assertEquals(identify(new Foo()), identify(new Foo()));
+	assertEquals(identify(new Foo()), identify({ a: 1, b: 2 }));
+
+	const nullProto = Object.assign(Object.create(null), { a: 1, b: 2 });
+	assertEquals(identify(nullProto), identify({ a: 1, b: 2 }));
+
+	// A literal `constructor` key must still hash, not throw.
+	assertEquals(identify({ constructor: 1 }), identify({ constructor: 1 }));
 });
 
 Deno.test('values :: circular ref should be consistent', () => {

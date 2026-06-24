@@ -27,7 +27,7 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 - ✅ **Intuitive**
 - 🌪 **Recursive/Circular support**
 - 🏎 **Performant** — check the [benchmarks](#-benchmark).
-- 🪶 **Lightweight** — around 1.4 kB generated ESM and no
+- 🪶 **Lightweight** — around 436 B minified and gzipped, with no
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## ⚙️ Install
