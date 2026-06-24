@@ -53,23 +53,51 @@ const key = identify({ user: 7, filters: new Set(['active', 'new']) });
 
 ## 💨 Benchmark
 
-```
-| benchmark               | time/iter (avg) |        iter/s |      (min … max)      |      p75 |      p99 |     p995 |
-| ----------------------- | --------------- | ------------- | --------------------- | -------- | -------- | -------- |
-| object-identity         |        573.0 ns |     1,745,000 | (540.1 ns … 607.1 ns) | 585.2 ns | 607.1 ns | 607.1 ns |
-| object-hash             |          6.7 µs |       149,000 | (  6.2 µs … 164.9 µs) |   6.5 µs |   8.0 µs |  21.2 µs |
-| json-stable-stringify   |          1.7 µs |       588,400 | (  1.6 µs …   2.9 µs) |   1.6 µs |   2.9 µs |   2.9 µs |
-| tiny-stable-stringify   |          1.6 µs |       639,600 | (  1.5 µs …   1.6 µs) |   1.6 µs |   1.6 µs |   1.6 µs |
+| benchmark                             | time/iter (avg) | iter/s    | (min … max)           | p75      | p99      | p995     |
+| ------------------------------------- | --------------- | --------- | --------------------- | -------- | -------- | -------- |
+| object-identity                       | 582.4 ns        | 1,717,000 | (540.4 ns … 807.5 ns) | 588.1 ns | 807.5 ns | 807.5 ns |
+| object-hash                           | 8.3 µs          | 120,500   | ( 7.4 µs … 211.7 µs)  | 8.0 µs   | 15.4 µs  | 46.0 µs  |
+| ohash                                 | 3.1 µs          | 320,500   | ( 2.8 µs … 208.7 µs)  | 3.1 µs   | 3.5 µs   | 4.7 µs   |
+| @liqd-js/fast-object-hash             | 2.5 µs          | 403,400   | ( 2.4 µs … 2.9 µs)    | 2.5 µs   | 2.9 µs   | 2.9 µs   |
+| hash-it †                             | 2.5 µs          | 406,700   | ( 2.4 µs … 3.0 µs)    | 2.5 µs   | 3.0 µs   | 3.0 µs   |
+| json-stable-stringify                 | 1.7 µs          | 600,300   | ( 1.6 µs … 1.8 µs)    | 1.7 µs   | 1.8 µs   | 1.8 µs   |
+| fast-json-stable-stringify            | 1.3 µs          | 749,800   | ( 1.3 µs … 1.5 µs)    | 1.3 µs   | 1.5 µs   | 1.5 µs   |
+| faster-stable-stringify               | 1.6 µs          | 630,500   | ( 1.5 µs … 1.8 µs)    | 1.6 µs   | 1.8 µs   | 1.8 µs   |
+| tiny-stable-stringify                 | 1.6 µs          | 644,200   | ( 1.5 µs … 1.6 µs)    | 1.6 µs   | 1.6 µs   | 1.6 µs   |
+| safe-stable-stringify                 | 1.2 µs          | 850,700   | ( 1.2 µs … 1.2 µs)    | 1.2 µs   | 1.2 µs   | 1.2 µs   |
+| json-stringify-deterministic          | 2.8 µs          | 359,400   | ( 2.7 µs … 2.9 µs)    | 2.8 µs   | 2.9 µs   | 2.9 µs   |
+| json-stable-stringify-without-jsonify | 1.6 µs          | 639,400   | ( 1.5 µs … 1.6 µs)    | 1.6 µs   | 1.6 µs   | 1.6 µs   |
+| @emeraldsquad/json-stable-stringify   | 1.6 µs          | 638,000   | ( 1.5 µs … 1.6 µs)    | 1.6 µs   | 1.6 µs   | 1.6 µs   |
+| canonicalize                          | 1.8 µs          | 570,100   | ( 1.7 µs … 1.8 µs)    | 1.8 µs   | 1.8 µs   | 1.8 µs   |
+| json-canonicalize                     | 1.6 µs          | 612,100   | ( 1.6 µs … 1.7 µs)    | 1.7 µs   | 1.7 µs   | 1.7 µs   |
+| canonical-json                        | 1.7 µs          | 587,100   | ( 1.7 µs … 1.8 µs)    | 1.7 µs   | 1.8 µs   | 1.8 µs   |
+| @tufjs/canonical-json                 | 1.2 µs          | 805,100   | ( 1.2 µs … 1.3 µs)    | 1.2 µs   | 1.3 µs   | 1.3 µs   |
 
+```
 summary
   object-identity
-     2.73x faster than tiny-stable-stringify
-     2.97x faster than json-stable-stringify
-    11.71x faster than object-hash
+     2.02x faster than safe-stable-stringify
+     2.13x faster than @tufjs/canonical-json
+     2.29x faster than fast-json-stable-stringify
+     2.67x faster than tiny-stable-stringify
+     2.69x faster than json-stable-stringify-without-jsonify
+     2.69x faster than @emeraldsquad/json-stable-stringify
+     2.72x faster than faster-stable-stringify
+     2.81x faster than json-canonicalize
+     2.86x faster than json-stable-stringify
+     2.92x faster than canonical-json
+     3.01x faster than canonicalize
+     4.22x faster than hash-it †
+     4.26x faster than @liqd-js/fast-object-hash
+     4.78x faster than json-stringify-deterministic
+     5.36x faster than ohash
+    14.25x faster than object-hash
 ```
 
 > ^ `object-identity` only handles JSON-like data by design. It won't fingerprint functions or every
 > Node builtin the way some alternatives do, so these numbers only reflect the payloads it targets.
+>
+> `†` no canonicalization-only step, so its time includes hashing.
 
 ## License
 
