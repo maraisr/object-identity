@@ -9,8 +9,12 @@
 	"imports": {
 		"@std/assert": "jsr:@std/assert@^1",
 		"@std/path": "jsr:@std/path@^1",
+		"fast-check": "npm:fast-check@^4",
+		"json-stable-stringify": "npm:json-stable-stringify@^1",
+		"object-hash": "npm:object-hash@^3",
 		"oxc-minify": "npm:oxc-minify@^0.73",
-		"oxc-transform": "npm:oxc-transform@^0.73"
+		"oxc-transform": "npm:oxc-transform@^0.73",
+		"tiny-stable-stringify": "npm:tiny-stable-stringify@^0.1"
 	},
 	"lock": false,
 	"lint": {

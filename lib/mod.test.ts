@@ -6,6 +6,7 @@ import {
 	assertNotMatch,
 	assertThrows,
 } from '@std/assert';
+import fc from 'fast-check';
 import { identify } from '../lib/mod.ts';
 
 Deno.test('exports', () => {
@@ -16,7 +17,8 @@ Deno.test('arrays :: flat', () => {
 	assertEquals(identify([1, 2, 3]), identify([1, 2, 3]));
 });
 
-Deno.test('arrays :: order should not matter', () => {
+Deno.test('arrays :: order is significant', () => {
+	// Arrays are sequences — unlike objects/maps, their elements are never sorted.
 	assertNotEquals(identify([3, 2, 1]), identify([1, 2, 3]));
 });
 
@@ -115,14 +117,15 @@ Deno.test('objects :: same hash for Map or Object', () => {
 	assertEquals(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
 });
 
-Deno.test('sets :: shouldnt be ordered', () => {
+Deno.test('sets :: order is significant', () => {
+	// Sets are walked in insertion order; their members are never sorted.
 	assertNotEquals(
 		identify(new Set([1, 2, 3])),
 		identify(new Set([3, 2, 1])),
 	);
 });
 
-Deno.test('sets :: shouldnt be ordered', () => {
+Deno.test('sets :: order is significant for object members', () => {
 	assertNotEquals(
 		identify(new Set([{ a: 'a' }, { b: 'b' }])),
 		identify(new Set([{ b: 'b' }, { a: 'a' }])),
@@ -275,4 +278,113 @@ Deno.test('values :: should only be seen once', () => {
 		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
 	});
 	assertNotMatch(hash, /~\d+/);
+});
+
+Deno.test('objects :: shared (non-circular) references are stable', () => {
+	const shared = { v: 1 };
+	// Sharing one instance must hash the same as two distinct equal instances.
+	assertEquals(
+		identify({ x: shared, y: shared }),
+		identify({ x: { v: 1 }, y: { v: 1 } }),
+	);
+});
+
+Deno.test('objects :: deeply nested input does not overflow', () => {
+	let root: any = {};
+	let node = root;
+	for (let i = 0; i < 1000; i++) {
+		node.i = i;
+		node.child = {};
+		node = node.child;
+	}
+	assert(identify(root));
+	assertEquals(identify(root), identify(root));
+});
+
+Deno.test('objects :: realistic payload, key order never matters', () => {
+	assertEquals(
+		identify({
+			id: 12345,
+			name: 'a product',
+			tags: ['a', 'b', 'c'],
+			meta: { created: '2024-01-01', active: true, count: 42 },
+		}),
+		identify({
+			meta: { count: 42, active: true, created: '2024-01-01' },
+			tags: ['a', 'b', 'c'],
+			name: 'a product',
+			id: 12345,
+		}),
+	);
+});
+
+Deno.test('maps :: mixed key types, order independent', () => {
+	assertEquals(
+		identify(new Map<unknown, unknown>([['a', 1], [2, 'b'], ['c', 3]])),
+		identify(new Map<unknown, unknown>([[2, 'b'], ['c', 3], ['a', 1]])),
+	);
+});
+
+// --- property tests (fast-check) ---
+// A recursive arbitrary for the json-like values the library supports:
+// primitives, dates, regexps, arrays, plain objects, Sets and Maps. Keys come
+// from a small string pool; Map keys are kept string-only so they sort stably
+// (mixing primitive and object Map keys is an intentionally-unsupported edge).
+const keyArb = fc.constantFrom('a', 'b', 'c', 'd', 'foo', 'bar', '1', '2');
+const leafArb = fc.oneof(
+	fc.integer(),
+	fc.double(),
+	fc.string(),
+	fc.boolean(),
+	fc.constant(null),
+	fc.constant(undefined),
+	fc.date(),
+	fc.constantFrom(/a/, /b/gi, /\d+/m),
+);
+const jsonish = fc.letrec((tie) => ({
+	node: fc.oneof(
+		{ maxDepth: 4 },
+		leafArb,
+		fc.array(tie('node'), { maxLength: 5 }),
+		fc.array(tie('node'), { maxLength: 5 }).map((xs) => new Set(xs)),
+		fc.array(fc.tuple(keyArb, tie('node')), { maxLength: 5 }).map((es) => new Map(es)),
+		fc.dictionary(keyArb, tie('node'), { maxKeys: 5 }),
+	),
+})).node;
+
+// Rebuilds a value with object/map key insertion order reversed at every level,
+// while preserving array/set element order (which is significant).
+function reorder(v: any): any {
+	if (v === null || typeof v !== 'object' || v instanceof Date || v instanceof RegExp) return v;
+	if (Array.isArray(v)) return v.map(reorder);
+	if (v instanceof Set) {
+		const s = new Set();
+		for (const x of v) s.add(reorder(x));
+		return s;
+	}
+	if (v instanceof Map) {
+		const m = new Map();
+		for (const [k, val] of [...v].reverse()) m.set(k, reorder(val));
+		return m;
+	}
+	const o: Record<string, unknown> = {};
+	for (const k of Object.keys(v).reverse()) o[k] = reorder(v[k]);
+	return o;
+}
+
+Deno.test('fuzz :: identify is deterministic', () => {
+	fc.assert(
+		fc.property(jsonish, (v) => {
+			const hash = identify(v);
+			return typeof hash === 'string' && identify(v) === hash;
+		}),
+		{ numRuns: 1000 },
+	);
+});
+
+Deno.test('fuzz :: object & map key order is irrelevant', () => {
+	fc.assert(
+		fc.property(jsonish, (v) => identify(v) === identify(reorder(v))),
+		{ numRuns: 1000 },
+	);
 });

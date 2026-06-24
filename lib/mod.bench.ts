@@ -1,6 +1,6 @@
-import objectHash from 'npm:object-hash';
-import jsonStableStringify from 'npm:json-stable-stringify';
-import { stringify as tinyStableStringify } from 'npm:tiny-stable-stringify';
+import objectHash from 'object-hash';
+import jsonStableStringify from 'json-stable-stringify';
+import { stringify as tinyStableStringify } from 'tiny-stable-stringify';
 
 import { identify } from './mod.ts';
 
