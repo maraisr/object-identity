@@ -55,10 +55,13 @@ const scenarios: Record<string, () => unknown> = {
 	},
 };
 
-const candidates: Record<string, {
-	lib: () => Promise<any>;
-	run: (mod: any, value: any) => unknown;
-}> = {
+const candidates: Record<
+	string,
+	{
+		lib: () => Promise<any>;
+		run: (mod: any, value: any) => unknown;
+	}
+> = {
 	'object-identity': {
 		lib: () => import('./mod.ts'),
 		run: (m, o) => m.identify(o),
@@ -99,6 +102,10 @@ const candidates: Record<string, {
 		lib: () => import('npm:json-stable-stringify-without-jsonify@^1.0'),
 		run: (m, o) => m.default(o),
 	},
+	'json-sorted-stringify': {
+		lib: () => import('npm:json-sorted-stringify@^1.0'),
+		run: (m, o) => m.default(o),
+	},
 	canonicalize: {
 		lib: () => import('npm:canonicalize@^3.0'),
 		run: (m, o) => m.default(o),
@@ -121,7 +128,9 @@ for (const [scenario, value] of fixtures) {
 		let valid = false;
 		try {
 			valid = c.run(mods[name], value) === c.run(mods[name], value);
-		} catch { /* leaves valid false -> ignored */ }
+		} catch {
+			/* leaves valid false -> ignored */
+		}
 
 		Deno.bench({
 			name,
