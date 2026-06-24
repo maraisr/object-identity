@@ -2,7 +2,10 @@
 	"name": "object-identity",
 	"version": "0.2.0",
 	"description": "Canonicalize any value into a tiny, stable identity string. Structural fingerprints for cache keys, deduping, and memoization.",
-	"repository": "maraisr/object-identity",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/maraisr/object-identity.git"
+	},
 	"license": "MIT",
 	"author": "Marais Rossouw <me@marais.dev> (https://marais.io)",
 	"type": "module",
