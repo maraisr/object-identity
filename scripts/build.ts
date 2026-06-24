@@ -10,8 +10,8 @@
 //   $ git push origin main --tags
 //   #-> CI builds w/ publish
 
-import oxc from 'npm:oxc-transform@0.58.1';
-import { minify } from 'npm:oxc-minify@0.73.2';
+import { transform } from 'npm:oxc-transform@0.137.0';
+import { minify } from 'npm:oxc-minify@0.137.0';
 import { dirname, join, relative, resolve } from '@std/path';
 
 import denoJson from '../deno.json' with { type: 'json' };
@@ -42,7 +42,7 @@ async function write(file: string, raw: string, compress?: boolean) {
 	console.log('> writing "%s" file', file);
 
 	if (compress) {
-		let c = minify(file, raw, { compress: true, mangle: true });
+		let c = await minify(file, raw, { compress: true, mangle: true });
 		gz = await gzip(Encoder.encode(c.code));
 	} else {
 		gz = await gzip(Encoder.encode(raw));
@@ -51,12 +51,12 @@ async function write(file: string, raw: string, compress?: boolean) {
 	console.log('::notice::%s (%d B)', file, gz);
 }
 
-async function transform(name: string, file: string) {
+async function compile(name: string, file: string) {
 	let raw = await Deno.readTextFile(file);
 	if (name === '.') name = 'index';
 	name = name.replace(/^\.\//, '');
 
-	let xform = oxc.transform(file, raw, {
+	let xform = await transform(file, raw, {
 		target: 'esnext',
 		sourceType: 'module',
 		typescript: {
@@ -68,26 +68,18 @@ async function transform(name: string, file: string) {
 		},
 	});
 
-	if (xform.errors.length > 0) {
-		bail(
-			'transform',
-			xform.errors.map((err: any) => err.message),
-		);
-	}
+	if (xform.errors.length > 0) bail('transform', xform.errors.map((err: any) => err.message));
 
 	file = `${output}/${name}.js`;
 	await write(file, xform.code, true);
 
 	if (xform.declaration) {
 		file = `${output}/${name}.d.ts`;
-
-		// TEMP: rewrite ".ts" extension from declaration files
-		// @see https://github.com/oxc-project/oxc/issues/5395
-		await write(file, xform.declaration.replace(/\.ts(['"])/g, '.d.ts$1'));
+		await write(file, xform.declaration);
 	}
 }
 
-for (let [name, src] of Object.entries(Inputs)) await transform(name, src);
+for (let [name, src] of Object.entries(Inputs)) await compile(name, src);
 
 await copy('package.json');
 await copy('readme.md');
