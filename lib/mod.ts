@@ -1,4 +1,4 @@
-function walk(input: any, seen: any[], depth: number): string {
+function walk(input: any, seen: any[]): string {
 	if (input === null) return 'L';
 
 	let type = typeof input;
@@ -20,8 +20,8 @@ function walk(input: any, seen: any[], depth: number): string {
 	}
 
 	let ref: any = seen.indexOf(input);
-	if (~ref) return (ref = seen[ref + 1]) > 0 ? '~' + ref : ref;
-	ref = seen.push(input, ++depth) - 1;
+	if (~ref) return '~' + (ref + 1);
+	seen.push(input);
 
 	let out: string, i = 0, keys: any, tmp: any;
 
@@ -29,20 +29,20 @@ function walk(input: any, seen: any[], depth: number): string {
 		for (
 			out = 'a';
 			i < input.length;
-			out += (tmp = input[i++]) === undefined ? 'L' : walk(tmp, seen, depth)
+			out += (tmp = input[i++]) === undefined ? 'L' : walk(tmp, seen)
 		);
 	} else if (input instanceof Set) {
 		out = 'e';
-		for (let value of input) out += value === undefined ? 'L' : walk(value, seen, depth);
+		for (let value of input) out += value === undefined ? 'L' : walk(value, seen);
 	} else if (input instanceof Map) {
 		out = 'o';
 		if (input.size > 1) {
 			for (keys = [...input.keys()].sort(); i < keys.length; i++) {
-				((tmp = input.get(keys[i])) !== undefined) && (out += keys[i] + walk(tmp, seen, depth));
+				((tmp = input.get(keys[i])) !== undefined) && (out += keys[i] + walk(tmp, seen));
 			}
 		} else {
 			for (keys of input) {
-				((tmp = keys[1]) !== undefined) && (out += keys[0] + walk(tmp, seen, depth));
+				((tmp = keys[1]) !== undefined) && (out += keys[0] + walk(tmp, seen));
 			}
 		}
 	} // Plain objects, class instances and null-prototype objects have no
@@ -54,13 +54,13 @@ function walk(input: any, seen: any[], depth: number): string {
 		keys = Object.keys(input);
 		if (keys.length > 1) keys.sort();
 		for (; i < keys.length; i++) {
-			if ((tmp = input[keys[i]]) !== undefined) out += keys[i] + walk(tmp, seen, depth);
+			if ((tmp = input[keys[i]]) !== undefined) out += keys[i] + walk(tmp, seen);
 		}
 	} else {
 		throw new Error('Unsupported value');
 	}
 
-	seen[ref] = out;
+	seen.pop();
 	return out;
 }
 
@@ -74,5 +74,5 @@ function walk(input: any, seen: any[], depth: number): string {
  * ```
  */
 export function identify<T>(input: T): string {
-	return walk(input, [], 0);
+	return walk(input, []);
 }
