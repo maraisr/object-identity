@@ -78,9 +78,26 @@ Deno.test('bigint :: matches the equivalent number', () => {
 	assertEquals(identify(0n), identify(0));
 });
 
-Deno.test('symbols :: throw (cannot be coerced)', () => {
-	assertThrows(() => identify(Symbol()));
-	assertThrows(() => identify(Symbol('x')));
+Deno.test('symbols :: dropped like JSON.stringify', () => {
+	// Symbols have no real representation; they are omitted as object/map values
+	// and fold to null in array/set positions, matching JSON.stringify.
+	assertEquals(identify({ a: 1, s: Symbol() }), identify({ a: 1 }));
+	assertEquals(identify({ a: 1, s: Symbol('x') }), identify({ a: 1 }));
+	assertEquals(identify([1, Symbol(), 2]), identify([1, null, 2]));
+	// A bare symbol canonicalizes to the same marker as a bare undefined.
+	assertEquals(identify(Symbol()), identify(undefined));
+	assertEquals(identify(Symbol('x')), identify(undefined));
+});
+
+Deno.test('functions :: dropped like JSON.stringify', () => {
+	// Functions have no real representation; same drop rules as symbols/undefined.
+	assertEquals(identify({ a: 1, f: () => {} }), identify({ a: 1 }));
+	assertEquals(identify([1, () => {}, 2]), identify([1, null, 2]));
+	// Distinct function bodies are indistinguishable once dropped.
+	assertEquals(identify({ f: () => 1 }), identify({ f: () => 2 }));
+	assertEquals(identify({ f() {} }), identify({}));
+	// A bare function canonicalizes to the same marker as a bare undefined.
+	assertEquals(identify(() => {}), identify(undefined));
 });
 
 // ~> Dates & RegExps
