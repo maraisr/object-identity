@@ -101,6 +101,38 @@ Deno.test('functions :: dropped like JSON.stringify', () => {
 	assertEquals(identify(() => {}), identify(undefined));
 });
 
+// ~> toJSON
+
+Deno.test('toJSON :: result is serialized in place', () => {
+	assertEquals(identify({ toJSON: () => ({ a: 1, b: [2] }) }), identify({ a: 1, b: [2] }));
+	assertEquals(identify({ ignored: 99, toJSON: () => ({ a: 1 }) }), identify({ a: 1 }));
+	// Primitive and undefined results behave like that primitive / a drop.
+	assertEquals(identify({ toJSON: () => 42 }), identify(42));
+	assertEquals(identify({ toJSON: () => 'x' }), identify('x'));
+	assertEquals(identify({ a: 1, b: { toJSON: () => undefined } }), identify({ a: 1 }));
+});
+
+Deno.test('toJSON :: URL serializes as its href', () => {
+	assertEquals(
+		identify(new URL('https://example.com/a?b=1#c')),
+		identify('https://example.com/a?b=1#c'),
+	);
+	assertEquals(identify(new URL('https://a.test/')), identify(new URL('https://a.test/')));
+	assertNotEquals(identify(new URL('https://a.test/')), identify(new URL('https://b.test/')));
+});
+
+Deno.test('toJSON :: builtins with special forms ignore toJSON', () => {
+	assertEquals(identify(new Date(0)), 'd0');
+	assertNotEquals(identify(new Date(0)), identify(new Date(0).toJSON()));
+	assertEquals(identify(Buffer.from([1, 2])), identify(new Uint8Array([1, 2])));
+});
+
+Deno.test('toJSON :: only applied once, like JSON.stringify', () => {
+	const o: any = { a: 1 };
+	o.toJSON = () => o;
+	assertEquals(identify(o), identify({ a: 1 }));
+});
+
 // ~> Dates & RegExps
 
 Deno.test('dates :: equal instants match, different instants differ', () => {
@@ -489,8 +521,8 @@ Deno.test('format :: supported builtins serialize consistently', () => {
 	assertWire('uint8 clamped array', new Uint8ClampedArray([1, 255]), 'o0n11n255');
 	assertWire('uint16 array', new Uint16Array([1, 2]), 'o0n11n2');
 	assertWire('uint32 array', new Uint32Array([1, 2]), 'o0n11n2');
-	//assertWire('custom toJSON', { toJSON: () => ({ a: 1, b: [2] }) }, 'oan1ban2');
-	//assertWire('url', new URL('https://example.com/a?b=1#c'), 'shttps://example.com/a?b=1#c');
+	assertWire('custom toJSON', { toJSON: () => ({ a: 1, b: [2] }) }, 'oan1ban2');
+	assertWire('url', new URL('https://example.com/a?b=1#c'), 'shttps://example.com/a?b=1#c');
 });
 
 Deno.test('format :: circular array back-reference', () => {

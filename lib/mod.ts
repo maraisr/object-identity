@@ -17,6 +17,11 @@ function walk(input: any, seen: any[]): string | undefined {
 	if (!is_arr) {
 		if (input instanceof Date) return 'd' + +input;
 		if (input instanceof RegExp) return 'r' + input.source + input.flags;
+		if (typeof input.toJSON === 'function' && !ArrayBuffer.isView(input)) {
+			input = input.toJSON();
+			if (typeof input !== 'object' || input === null) return walk(input, seen);
+			is_arr = Array.isArray(input);
+		}
 	}
 
 	let ref: any = seen.indexOf(input);

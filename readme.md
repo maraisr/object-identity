@@ -28,7 +28,7 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 - 🧬 **Canonical.** The same shape always produces the same id.
 - 🌀 **Deep and cycle-safe.** Handles nested objects, arrays, sets, maps, and circular references.
 - 🏎 **Fast.** See the [benchmarks](#-benchmark).
-- 🪶 **Tiny.** Around 529B minified and gzipped, with zero
+- 🪶 **Tiny.** Around 571B minified and gzipped, with zero
   [dependencies](https://npm.anvaka.com/#/view/2d/object-identity/).
 
 ## ⚙️ Install
