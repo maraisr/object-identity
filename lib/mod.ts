@@ -1,34 +1,32 @@
 function walk(input: any, seen: any[]): string | undefined {
 	if (input === null) return 'L';
 
-	let type = typeof input;
-	if (type !== 'object') {
-		if (type === 'number') return input - input === 0 ? 'n' + input : 'L';
-		if (type === 'string') return 's' + input;
-		if (type === 'bigint') return 'n' + input;
-		if (type === 'boolean') return input ? 'T' : 'F';
-		// functions, symbols, undefined are dropped and treated as identity equal.
+	let out: string, i = 0, keys: any, tmp: any;
+
+	if ((tmp = typeof input) !== 'object') {
+		if (tmp === 'number') return input - input === 0 ? 'n' + input : 'L';
+		if (tmp === 'string') return 's' + input;
+		if (tmp === 'bigint') return 'n' + input;
+		if (tmp === 'boolean') return input ? 'T' : 'F';
 		return;
 	}
 
-	// Arrays are the most common container, so settle them before the rarer
-	// Date/RegExp leaves to keep the hot path short.
 	let is_arr = Array.isArray(input);
 	if (!is_arr) {
 		if (input instanceof Date) return 'd' + +input;
 		if (input instanceof RegExp) return 'r' + input.source + input.flags;
+
 		if (typeof input.toJSON === 'function' && !ArrayBuffer.isView(input)) {
 			input = input.toJSON();
-			if (typeof input !== 'object' || input === null) return walk(input, seen);
+			if (input === null) return 'L';
+			if (typeof input !== 'object') return walk(input, seen);
 			is_arr = Array.isArray(input);
 		}
 	}
 
-	let ref: any = seen.indexOf(input);
-	if (~ref) return '~' + (ref + 1);
+	tmp = seen.indexOf(input);
+	if (~tmp) return '~' + (tmp + 1);
 	seen.push(input);
-
-	let out: string, i = 0, keys: any, tmp: any;
 
 	if (is_arr) {
 		for (
@@ -40,25 +38,15 @@ function walk(input: any, seen: any[]): string | undefined {
 		out = 'e';
 		for (let value of input) out += (tmp = walk(value, seen)) === undefined ? 'L' : tmp;
 	} else if (input instanceof Map) {
-		out = 'o';
-		if (input.size > 1) {
-			for (keys = [...input.keys()].sort(); i < keys.length; i++) {
-				(tmp = walk(input.get(keys[i]), seen)) !== undefined && (out += keys[i] + tmp);
-			}
-		} else {
-			for (keys of input) {
-				(tmp = walk(keys[1], seen)) !== undefined && (out += keys[0] + tmp);
-			}
+		keys = [...input.keys()];
+		if (keys.length > 1) keys.sort();
+		for (out = 'o'; i < keys.length; i++) {
+			if ((tmp = walk(input.get(keys[i]), seen)) !== undefined) out += keys[i] + tmp;
 		}
-	} // Plain objects, class instances and null-prototype objects have no
-	// `Symbol.toStringTag`. Typed arrays (and other ArrayBuffer views) do, but
-	// JSON treats them as index-keyed objects, so we walk their keys the same way.
-	// Other exotic builtins (Promise, WeakMap, ArrayBuffer) fall through to the throw.
-	else if (input[Symbol.toStringTag] === undefined || ArrayBuffer.isView(input)) {
-		out = 'o';
+	} else if (input[Symbol.toStringTag] === undefined || ArrayBuffer.isView(input)) {
 		keys = Object.keys(input);
 		if (keys.length > 1) keys.sort();
-		for (; i < keys.length; i++) {
+		for (out = 'o'; i < keys.length; i++) {
 			if ((tmp = walk(input[keys[i]], seen)) !== undefined) out += keys[i] + tmp;
 		}
 	} else {
