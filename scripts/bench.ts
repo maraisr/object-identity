@@ -76,9 +76,7 @@ const details = groups
 		const ranked = rows[g].filter((r) => r.ops != null).sort((a, b) => b.ops! - a.ops!);
 		const [win, alt] = ranked;
 		if (win) {
-			const ahead = alt
-				? ` (${((win.ops! / alt.ops! - 1) * 100).toFixed(1)}% faster than ${alt.name})`
-				: '';
+			const ahead = alt ? ` (${(win.ops! / alt.ops!).toFixed(2)}x faster than ${alt.name})` : '';
 			lines.push('─'.repeat(Math.max(...lines.map((l) => l.length))), `⭐︎ ${win.name}${ahead}`);
 		}
 
