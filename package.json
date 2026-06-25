@@ -1,6 +1,6 @@
 {
 	"name": "object-identity",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Canonicalize any value into a tiny, stable identity string. Structural fingerprints for cache keys, deduping, and memoization.",
 	"repository": {
 		"type": "git",
