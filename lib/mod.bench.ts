@@ -88,7 +88,7 @@ const candidates: Record<
 	},
 	'fast-json-stable-stringify': {
 		lib: () => import('npm:fast-json-stable-stringify@^2.1'),
-		run: (m, o) => m.default(o),
+		run: (m, o) => m.default(o, { cycles: true }),
 	},
 	'tiny-stable-stringify': {
 		lib: () => import('npm:tiny-stable-stringify@^0.1'),
@@ -96,7 +96,7 @@ const candidates: Record<
 	},
 	'json-stringify-deterministic': {
 		lib: () => import('npm:json-stringify-deterministic@^1.0'),
-		run: (m, o) => m.default(o),
+		run: (m, o) => m.default(o, { cycles: true }),
 	},
 	'json-stable-stringify-without-jsonify': {
 		lib: () => import('npm:json-stable-stringify-without-jsonify@^1.0'),
