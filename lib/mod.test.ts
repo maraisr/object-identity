@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertNotEquals, assertNotMatch, assertThrows } from '@std/assert';
 import fc from 'fast-check';
+import { Buffer } from 'node:buffer';
 import { identify } from '../lib/mod.ts';
 
 Deno.test('exports :: identify is a function', () => {
@@ -460,6 +461,37 @@ Deno.test('refs :: repeated non-circular references in arrays', () => {
 //
 // These lock the exact serialization. A change here is a breaking change to every
 // previously-stored identity, so update deliberately.
+
+Deno.test('format :: supported builtins serialize consistently', () => {
+	const assertWire = (name: string, input: unknown, expected: string) =>
+		assertEquals(identify(input), expected, name);
+
+	assertWire('array', [1, undefined, 'x'], 'an1Lsx');
+	assertWire('bigint', 123n, 'n123');
+	assertWire('bigint64 array', new BigInt64Array([-1n, 2n]), 'o0n-11n2');
+	assertWire('biguint64 array', new BigUint64Array([1n, 2n]), 'o0n11n2');
+	assertWire('boolean', true, 'T');
+	assertWire('buffer', Buffer.from([1, 2]), 'o0n11n2');
+	assertWire('data view', new DataView(new Uint8Array([1, 2]).buffer), 'o');
+	assertWire('date', new Date(0), 'd0');
+	assertWire('float32 array', new Float32Array([1.5, -2.25]), 'o0n1.51n-2.25');
+	assertWire('float64 array', new Float64Array([1.5, -2.25]), 'o0n1.51n-2.25');
+	assertWire('int8 array', new Int8Array([-1, 2]), 'o0n-11n2');
+	assertWire('int16 array', new Int16Array([-1, 2]), 'o0n-11n2');
+	assertWire('int32 array', new Int32Array([-1, 2]), 'o0n-11n2');
+	assertWire('map', new Map([['b', 2], ['a', 1]]), 'oan1bn2');
+	assertWire('null', null, 'L');
+	assertWire('object', { b: 2, a: 1 }, 'oan1bn2');
+	assertWire('regexp', /ab/gi, 'rabgi');
+	assertWire('set', new Set([1, 2]), 'en1n2');
+	assertWire('string', 'hello', 'shello');
+	assertWire('uint8 array', new Uint8Array([1, 2]), 'o0n11n2');
+	assertWire('uint8 clamped array', new Uint8ClampedArray([1, 255]), 'o0n11n255');
+	assertWire('uint16 array', new Uint16Array([1, 2]), 'o0n11n2');
+	assertWire('uint32 array', new Uint32Array([1, 2]), 'o0n11n2');
+	//assertWire('custom toJSON', { toJSON: () => ({ a: 1, b: [2] }) }, 'oan1ban2');
+	//assertWire('url', new URL('https://example.com/a?b=1#c'), 'shttps://example.com/a?b=1#c');
+});
 
 Deno.test('format :: circular array back-reference', () => {
 	const arr: unknown[] = [1, 2, 3];
