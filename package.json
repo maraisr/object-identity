@@ -26,9 +26,13 @@
 		"normalize"
 	],
 	"sideEffects": false,
+	"main": "./index.cjs",
+	"module": "./index.js",
+	"types": "./index.d.ts",
 	"exports": {
 		".": {
 			"types": "./index.d.ts",
+			"require": "./index.cjs",
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"

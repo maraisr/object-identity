@@ -12,6 +12,7 @@
 
 import { transform } from 'npm:oxc-transform@0.137.0';
 import { minify } from 'npm:oxc-minify@0.137.0';
+import { rolldown } from 'npm:rolldown@1.1.2';
 import { dirname, join, relative, resolve } from '@std/path';
 
 import denoJson from '../deno.json' with { type: 'json' };
@@ -51,12 +52,13 @@ async function write(file: string, raw: string, compress?: boolean) {
 	console.log('::notice::%s (%d B)', file, gz);
 }
 
-async function compile(name: string, file: string) {
-	let raw = await Deno.readTextFile(file);
+async function compile(name: string, src: string) {
+	let raw = await Deno.readTextFile(src);
 	if (name === '.') name = 'index';
 	name = name.replace(/^\.\//, '');
 
-	let xform = await transform(file, raw, {
+	let file: string;
+	let xform = await transform(src, raw, {
 		target: 'esnext',
 		sourceType: 'module',
 		typescript: {
@@ -72,6 +74,9 @@ async function compile(name: string, file: string) {
 
 	file = `${output}/${name}.js`;
 	await write(file, xform.code, true);
+
+	file = `${output}/${name}.cjs`;
+	await write(file, await bundleCjs(src), true);
 
 	if (xform.declaration) {
 		file = `${output}/${name}.d.ts`;
@@ -90,6 +95,13 @@ await copy('license');
 function bail(label: string, errors: string[]) {
 	console.error('[%s] error(s)\n', label, errors.join(''));
 	Deno.exit(1);
+}
+
+async function bundleCjs(input: string): Promise<string> {
+	let bundle = await rolldown({ input, logLevel: 'silent' });
+	let result = await bundle.generate({ format: 'cjs', exports: 'named' });
+	await bundle.close();
+	return result.output[0].code;
 }
 
 function exists(path: string) {
