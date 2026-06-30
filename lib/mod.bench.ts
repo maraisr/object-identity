@@ -114,20 +114,23 @@ const candidates: Record<
 		lib: () => import('npm:@tufjs/canonical-json@^2.0'),
 		run: (m, o) => m.canonicalize(o),
 	},
+	'swr/_internal/stableHash': {
+		lib: () => import('npm:swr@^2.4/_internal'),
+		run: (m, o) => m.stableHash(o),
+	},
 };
 
 const mods: Record<string, any> = {};
 for (const [name, c] of Object.entries(candidates)) mods[name] = await c.lib();
 
-const fixtures = Object.entries(scenarios).map(([name, make]) => [name, make()] as const);
-
-for (const [scenario, value] of fixtures) {
+for (const [scenario, value] of Object.entries(scenarios)) {
 	for (const [name, c] of Object.entries(candidates)) {
 		// Validate up front: a throw (can't handle the shape) or non-deterministic
 		// output marks the bench ignored, so it's skipped instead of measured.
 		let valid = false;
 		try {
-			valid = c.run(mods[name], value) === c.run(mods[name], value);
+			let o = value();
+			valid = c.run(mods[name], o) === c.run(mods[name], o);
 		} catch {
 			/* leaves valid false -> ignored */
 		}
@@ -137,7 +140,12 @@ for (const [scenario, value] of fixtures) {
 			group: scenario,
 			baseline: name === 'object-identity',
 			ignore: !valid,
-			fn: () => void c.run(mods[name], value),
+			fn: (ctx) => {
+				let o = value();
+				ctx.start();
+				let _ = c.run(mods[name], o)
+				ctx.end();
+			}
 		});
 	}
 }
