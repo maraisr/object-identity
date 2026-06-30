@@ -62,105 +62,90 @@ const key = identify({ user: 7, filters: new Set(['active', 'new']) });
 <!-- BEGIN BENCHMARK -->
 
 ```
-✔ simple        ~  1.1µs @ 870,271 ops/sec ± 0.22%
-✔ deep          ~  8.4µs @ 118,807 ops/sec ± 0.01%
-✔ deep circular ~  6.0µs @ 166,470 ops/sec ± 0.51%
-✔ big           ~ 82.1µs @  12,175 ops/sec ± 1.06%
-✔ leafy         ~ 23.8µs @  41,957 ops/sec ± 0.70%
+✔ simple         829,712 ops/sec
+✔ deep           117,578 ops/sec
+✔ deep circular  169,652 ops/sec
+✔ big             11,664 ops/sec
+✔ leafy           41,925 ops/sec
 ```
 
 <details><summary>All candidates</summary>
 
-```
+```diff
 simple
-✔ object-identity                       ~  1.1µs @ 870,271 ops/sec ± 0.22%
-✔ safe-stable-stringify                 ~  1.8µs @ 563,781 ops/sec ± 0.46%
-✔ ohash                                 ~  3.8µs @ 262,901 ops/sec ± 0.25%
-✔ object-hash                           ~ 10.2µs @  98,164 ops/sec ± 1.84%
-✔ hash-it †                             ~  3.0µs @ 335,235 ops/sec ± 2.05%
-✔ json-stable-stringify                 ~  3.1µs @ 317,679 ops/sec ± 0.30%
-✔ fast-json-stable-stringify            ~  2.1µs @ 471,606 ops/sec ± 0.22%
-✔ tiny-stable-stringify                 ~  2.5µs @ 403,418 ops/sec ± 1.49%
-✔ json-stringify-deterministic          ~  3.2µs @ 313,455 ops/sec ± 0.63%
-✔ json-stable-stringify-without-jsonify ~  3.2µs @ 312,450 ops/sec ± 0.59%
-✔ json-sorted-stringify                 ~  2.4µs @ 411,299 ops/sec ± 0.86%
-✔ canonicalize                          ~  3.7µs @ 271,025 ops/sec ± 0.17%
-✔ swr/_internal/stableHash              ~  3.9µs @ 255,223 ops/sec ± 0.60%
-✘ @tufjs/canonical-json
-──────────────────────────────────────────────────────────────────────────
-⭐︎ object-identity (1.54x faster than safe-stable-stringify)
++ ✔ object-identity               829,712 ops/sec
+  ✔ safe-stable-stringify         544,561 ops/sec  1.52x
+  ✔ ohash                         257,343 ops/sec  3.22x
+  ✔ object-hash                    96,890 ops/sec  8.56x
+  ✔ hash-it †                     328,222 ops/sec  2.53x
+  ✔ json-stable-stringify         309,313 ops/sec  2.68x
+  ✔ fast-json-stable-stringify    458,943 ops/sec  1.81x
+  ✔ tiny-stable-stringify         402,523 ops/sec  2.06x
+  ✔ json-stringify-deterministic  311,265 ops/sec  2.67x
+  ✔ json-sorted-stringify         402,961 ops/sec  2.06x
+  ✔ canonicalize                  267,754 ops/sec  3.10x
+  ✔ swr/_internal/stableHash      250,439 ops/sec  3.31x
+  ✘ @tufjs/canonical-json
 
 deep
-✔ object-identity                       ~  8.4µs @ 118,807 ops/sec ± 0.01%
-✔ safe-stable-stringify                 ~ 13.3µs @  75,024 ops/sec ± 0.66%
-✔ ohash                                 ~ 26.0µs @  38,497 ops/sec ± 0.57%
-✔ object-hash                           ~ 56.2µs @  17,807 ops/sec ± 0.95%
-✔ hash-it †                             ~ 22.8µs @  43,812 ops/sec ± 0.14%
-✔ json-stable-stringify                 ~ 24.1µs @  41,487 ops/sec ± 0.95%
-✔ fast-json-stable-stringify            ~ 14.2µs @  70,522 ops/sec ± 0.39%
-✔ tiny-stable-stringify                 ~ 16.1µs @  62,039 ops/sec ± 0.56%
-✔ json-stringify-deterministic          ~ 23.2µs @  43,102 ops/sec ± 0.15%
-✔ json-stable-stringify-without-jsonify ~ 23.3µs @  42,858 ops/sec ± 0.18%
-✔ json-sorted-stringify                 ~ 15.8µs @  63,287 ops/sec ± 0.73%
-✔ canonicalize                          ~ 26.8µs @  37,383 ops/sec ± 0.16%
-✔ swr/_internal/stableHash              ~ 29.0µs @  34,460 ops/sec ± 22.90%
-✔ @tufjs/canonical-json                 ~ 34.9µs @  28,625 ops/sec ± 0.17%
-───────────────────────────────────────────────────────────────────────────
-⭐︎ object-identity (1.58x faster than safe-stable-stringify)
++ ✔ object-identity               117,578 ops/sec
+  ✔ safe-stable-stringify          74,688 ops/sec  1.57x
+  ✔ ohash                          38,360 ops/sec  3.07x
+  ✔ object-hash                    17,877 ops/sec  6.58x
+  ✔ hash-it †                      44,260 ops/sec  2.66x
+  ✔ json-stable-stringify          41,899 ops/sec  2.81x
+  ✔ fast-json-stable-stringify     70,452 ops/sec  1.67x
+  ✔ tiny-stable-stringify          62,336 ops/sec  1.89x
+  ✔ json-stringify-deterministic   43,571 ops/sec  2.70x
+  ✔ json-sorted-stringify          62,523 ops/sec  1.88x
+  ✔ canonicalize                   37,471 ops/sec  3.14x
+  ✔ swr/_internal/stableHash       34,445 ops/sec  3.41x
+  ✔ @tufjs/canonical-json          28,960 ops/sec  4.06x
 
 deep circular
-✔ object-identity                       ~  6.0µs @ 166,470 ops/sec ± 0.51%
-✔ safe-stable-stringify                 ~  7.5µs @ 132,624 ops/sec ± 0.27%
-✔ ohash                                 ~ 17.2µs @  58,116 ops/sec ± 0.49%
-✔ object-hash                           ~ 45.7µs @  21,863 ops/sec ± 0.07%
-✔ hash-it †                             ~ 16.1µs @  61,985 ops/sec ± 0.31%
-✘ json-stable-stringify
-✔ fast-json-stable-stringify            ~ 10.2µs @  97,666 ops/sec ± 0.51%
-✘ tiny-stable-stringify
-✔ json-stringify-deterministic          ~ 15.5µs @  64,604 ops/sec ± 0.41%
-✘ json-stable-stringify-without-jsonify
-✘ json-sorted-stringify
-✘ canonicalize
-✔ swr/_internal/stableHash              ~ 15.4µs @  65,066 ops/sec ± 21.11%
-✘ @tufjs/canonical-json
-───────────────────────────────────────────────────────────────────────────
-⭐︎ object-identity (1.26x faster than safe-stable-stringify)
++ ✔ object-identity               169,652 ops/sec
+  ✔ safe-stable-stringify         133,794 ops/sec  1.27x
+  ✔ ohash                          58,065 ops/sec  2.92x
+  ✔ object-hash                    22,029 ops/sec  7.70x
+  ✔ hash-it †                      62,480 ops/sec  2.72x
+  ✘ json-stable-stringify
+  ✔ fast-json-stable-stringify     94,420 ops/sec  1.80x
+  ✘ tiny-stable-stringify
+  ✔ json-stringify-deterministic   62,684 ops/sec  2.71x
+  ✘ json-sorted-stringify
+  ✘ canonicalize
+  ✔ swr/_internal/stableHash       54,642 ops/sec  3.10x
+  ✘ @tufjs/canonical-json
 
 big
-✔ object-identity                       ~  82.1µs @ 12,175 ops/sec ± 1.06%
-✔ safe-stable-stringify                 ~ 140.5µs @  7,118 ops/sec ± 0.04%
-✔ ohash                                 ~ 304.4µs @  3,285 ops/sec ± 0.53%
-✔ object-hash                           ~ 513.2µs @  1,949 ops/sec ± 1.23%
-✔ hash-it †                             ~ 276.5µs @  3,617 ops/sec ± 0.61%
-✔ json-stable-stringify                 ~ 228.2µs @  4,382 ops/sec ± 1.06%
-✔ fast-json-stable-stringify            ~ 164.2µs @  6,091 ops/sec ± 0.56%
-✔ tiny-stable-stringify                 ~ 180.0µs @  5,556 ops/sec ± 1.08%
-✔ json-stringify-deterministic          ~ 224.9µs @  4,447 ops/sec ± 1.01%
-✔ json-stable-stringify-without-jsonify ~ 224.1µs @  4,463 ops/sec ± 0.66%
-✔ json-sorted-stringify                 ~ 172.5µs @  5,797 ops/sec ± 0.21%
-✔ canonicalize                          ~ 262.7µs @  3,807 ops/sec ± 1.01%
-✔ swr/_internal/stableHash              ~ 287.7µs @  3,476 ops/sec ± 16.90%
-✔ @tufjs/canonical-json                 ~ 387.7µs @  2,580 ops/sec ± 0.32%
-───────────────────────────────────────────────────────────────────────────
-⭐︎ object-identity (1.71x faster than safe-stable-stringify)
++ ✔ object-identity               11,664 ops/sec
+  ✔ safe-stable-stringify          7,097 ops/sec  1.64x
+  ✔ ohash                          3,287 ops/sec  3.55x
+  ✔ object-hash                    1,940 ops/sec  6.01x
+  ✔ hash-it †                      3,583 ops/sec  3.26x
+  ✔ json-stable-stringify          4,396 ops/sec  2.65x
+  ✔ fast-json-stable-stringify     6,219 ops/sec  1.88x
+  ✔ tiny-stable-stringify          5,771 ops/sec  2.02x
+  ✔ json-stringify-deterministic   4,448 ops/sec  2.62x
+  ✔ json-sorted-stringify          5,719 ops/sec  2.04x
+  ✔ canonicalize                   3,799 ops/sec  3.07x
+  ✔ swr/_internal/stableHash       3,536 ops/sec  3.30x
+  ✔ @tufjs/canonical-json          2,542 ops/sec  4.59x
 
 leafy
-✔ object-identity                       ~  23.8µs @ 41,957 ops/sec ± 0.70%
-✔ safe-stable-stringify                 ~  50.3µs @ 19,896 ops/sec ± 0.47%
-✔ ohash                                 ~  30.9µs @ 32,336 ops/sec ± 0.38%
-✔ object-hash                           ~  87.7µs @ 11,397 ops/sec ± 1.27%
-✔ hash-it †                             ~  84.3µs @ 11,860 ops/sec ± 0.97%
-✔ json-stable-stringify                 ~ 115.1µs @  8,686 ops/sec ± 0.87%
-✔ fast-json-stable-stringify            ~  59.6µs @ 16,765 ops/sec ± 0.11%
-✔ tiny-stable-stringify                 ~ 107.8µs @  9,277 ops/sec ± 0.23%
-✔ json-stringify-deterministic          ~ 116.5µs @  8,583 ops/sec ± 0.29%
-✔ json-stable-stringify-without-jsonify ~ 117.2µs @  8,532 ops/sec ± 0.35%
-✔ json-sorted-stringify                 ~ 107.9µs @  9,266 ops/sec ± 0.15%
-✔ canonicalize                          ~  93.3µs @ 10,720 ops/sec ± 0.50%
-✔ swr/_internal/stableHash              ~ 134.1µs @  7,459 ops/sec ± 31.44%
-✔ @tufjs/canonical-json                 ~ 217.2µs @  4,605 ops/sec ± 1.07%
-───────────────────────────────────────────────────────────────────────────
-⭐︎ object-identity (1.30x faster than ohash)
++ ✔ object-identity               41,925 ops/sec
+  ✔ safe-stable-stringify         20,088 ops/sec  2.09x
+  ✔ ohash                         32,586 ops/sec  1.29x
+  ✔ object-hash                   11,693 ops/sec  3.59x
+  ✔ hash-it †                     12,092 ops/sec  3.47x
+  ✔ json-stable-stringify          8,863 ops/sec  4.73x
+  ✔ fast-json-stable-stringify    16,968 ops/sec  2.47x
+  ✔ tiny-stable-stringify          9,269 ops/sec  4.52x
+  ✔ json-stringify-deterministic   8,680 ops/sec  4.83x
+  ✔ json-sorted-stringify          9,522 ops/sec  4.40x
+  ✔ canonicalize                  10,858 ops/sec  3.86x
+  ✔ swr/_internal/stableHash       7,982 ops/sec  5.25x
+  ✔ @tufjs/canonical-json          4,714 ops/sec  8.89x
 ```
 
 </details>

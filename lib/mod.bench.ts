@@ -98,10 +98,6 @@ const candidates: Record<
 		lib: () => import('npm:json-stringify-deterministic@^1.0'),
 		run: (m, o) => m.default(o, { cycles: true }),
 	},
-	'json-stable-stringify-without-jsonify': {
-		lib: () => import('npm:json-stable-stringify-without-jsonify@^1.0'),
-		run: (m, o) => m.default(o),
-	},
 	'json-sorted-stringify': {
 		lib: () => import('npm:json-sorted-stringify@^1.0'),
 		run: (m, o) => m.default(o),
@@ -143,9 +139,9 @@ for (const [scenario, value] of Object.entries(scenarios)) {
 			fn: (ctx) => {
 				let o = value();
 				ctx.start();
-				let _ = c.run(mods[name], o)
+				let _ = c.run(mods[name], o);
 				ctx.end();
-			}
+			},
 		});
 	}
 }

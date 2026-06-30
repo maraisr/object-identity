@@ -8,7 +8,7 @@ const { stdout } = await new Deno.Command('deno', {
 
 const report = JSON.parse(new TextDecoder().decode(stdout));
 
-type Row = { name: string; ok: boolean; avg?: number; ops?: number; jitter?: number };
+type Row = { name: string; ok: boolean; ops?: number };
 
 const groups: string[] = [];
 const order: string[] = []; // candidate union, in first-seen (registration) order
@@ -25,10 +25,7 @@ for (const b of report.benches as Array<Record<string, any>>) {
 	metric[b.group][b.name] = {
 		name: b.name,
 		ok: true,
-		avg: ok.avg, // nanoseconds
 		ops: Math.round(1e9 / ok.avg),
-		// no stddev, so approximate jitter from p75 vs avg.
-		jitter: (Math.abs(ok.p75 - ok.avg) / ok.avg) * 100,
 	};
 }
 
@@ -38,47 +35,36 @@ for (const g of groups) rows[g] = order.map((name) => metric[g][name] ?? { name,
 
 const nf = new Intl.NumberFormat('en-AU');
 
-function dur(ns: number): string {
-	if (ns < 1e3) return `${ns.toFixed(1)}ns`;
-	if (ns < 1e6) return `${(ns / 1e3).toFixed(1)}µs`;
-	return `${(ns / 1e6).toFixed(1)}ms`;
-}
-
-function line(r: Row, label: string, nameW: number, avgW: number, opsW: number): string {
+function line(r: Row, label: string, nameW: number, opsW: number, rel = ''): string {
 	const mark = r.ok ? '✔' : '✘';
 	if (r.ops == null) return `${mark} ${label}`;
-	return `${mark} ${label.padEnd(nameW)} ~ ${dur(r.avg!).padStart(avgW)} @ ${
-		nf
-			.format(r.ops)
-			.padStart(opsW)
-	} ops/sec ± ${r.jitter!.toFixed(2)}%`;
+	const tail = rel.trim() ? `  ${rel}` : '';
+	return `${mark} ${label.padEnd(nameW)}  ${nf.format(r.ops).padStart(opsW)} ops/sec${tail}`;
 }
 
-const avgW = (rs: Row[]) => Math.max(0, ...rs.map((r) => (r.avg != null ? dur(r.avg).length : 0)));
 const opsW = (rs: Row[]) =>
 	Math.max(0, ...rs.map((r) => (r.ops != null ? nf.format(r.ops).length : 0)));
 
 // Top: just this library, one row per shape (the readme set).
 const baseline = groups.map((g) => rows[g].find((x) => x.name === BASELINE)!);
 const sumNameW = Math.max(...groups.map((g) => g.length));
-const sumAvgW = avgW(baseline);
 const sumOpsW = opsW(baseline);
-const summary = groups.map((g, k) => line(baseline[k], g, sumNameW, sumAvgW, sumOpsW)).join('\n');
+const summary = groups.map((g, k) => line(baseline[k], g, sumNameW, sumOpsW)).join('\n');
 
-// Details: every candidate, grouped by shape, with the winner called out.
 const details = groups
 	.map((g) => {
 		const nameW = Math.max(...rows[g].map((r) => r.name.length));
-		const w = [nameW, avgW(rows[g]), opsW(rows[g])] as const;
-		const lines = rows[g].map((r) => line(r, r.name, ...w));
+		const w = [nameW, opsW(rows[g])] as const;
 
-		// Fastest candidate wins; note how far ahead of the next best it is.
-		const ranked = rows[g].filter((r) => r.ops != null).sort((a, b) => b.ops! - a.ops!);
-		const [win, alt] = ranked;
-		if (win) {
-			const ahead = alt ? ` (${(win.ops! / alt.ops!).toFixed(2)}x faster than ${alt.name})` : '';
-			lines.push('─'.repeat(Math.max(...lines.map((l) => l.length))), `⭐︎ ${win.name}${ahead}`);
-		}
+		const base = rows[g].find((r) => r.name === BASELINE);
+		const rel = (r: Row) =>
+			base?.ops && r.ops && r.name !== BASELINE ? `${(base.ops / r.ops).toFixed(2)}x` : '';
+		const relW = Math.max(0, ...rows[g].map((r) => rel(r).length));
+
+		const lines = rows[g].map((r) => {
+			const body = line(r, r.name, ...w, rel(r).padStart(relW));
+			return r.name === BASELINE ? `+ ${body}` : `  ${body}`;
+		});
 
 		return `${g}\n${lines.join('\n')}`;
 	})
@@ -92,7 +78,7 @@ const block = [
 	'',
 	'<details><summary>All candidates</summary>',
 	'',
-	'```',
+	'```diff',
 	details,
 	'```',
 	'',
