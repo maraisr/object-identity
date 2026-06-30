@@ -133,6 +133,69 @@ Deno.test('toJSON :: only applied once, like JSON.stringify', () => {
 	assertEquals(identify(o), identify({ a: 1 }));
 });
 
+Deno.test('toJSON :: result cycling back to the original does not overflow', () => {
+	const fresh: any = {};
+	fresh.toJSON = () => ({ wrap: fresh });
+
+	const stable: any = {};
+	const wrapper = { wrap: stable };
+	stable.toJSON = () => wrapper;
+
+	assertEquals(identify(fresh), identify(fresh));
+	assertEquals(identify(fresh), identify(stable));
+});
+
+Deno.test('toJSON :: result resolving to an ancestor closes the cycle', () => {
+	const getter: any = {
+		get g() {
+			return { toJSON: () => getter };
+		},
+	};
+	assert(identify(getter));
+	assertEquals(identify(getter), identify(getter));
+
+	const parent: any = {};
+	const child: any = { toJSON: () => parent };
+	parent.child = child;
+	assert(identify(parent));
+	assertEquals(identify(parent), identify(parent));
+
+	const root: any = {};
+	const mid: any = {};
+	root.mid = mid;
+	mid.leaf = { toJSON: () => root };
+	assert(identify(root));
+	assertEquals(identify(root), identify(root));
+});
+
+Deno.test('toJSON :: ancestor cycles resolve through every container', () => {
+	const viaSet: any = { s: new Set() };
+	viaSet.s.add({ toJSON: () => viaSet });
+
+	const viaMap: any = { m: new Map() };
+	viaMap.m.set('k', { toJSON: () => viaMap });
+
+	const viaArray: any = { arr: [] as unknown[] };
+	viaArray.arr.push({ toJSON: () => viaArray });
+
+	assertEquals(identify(viaSet), identify(viaSet));
+	assertEquals(identify(viaMap), identify(viaMap));
+	assertEquals(identify(viaArray), identify(viaArray));
+});
+
+Deno.test('toJSON :: array and mutual results still resolve cycles', () => {
+	const arr: any = {};
+	arr.toJSON = () => [arr];
+	assertEquals(identify(arr), identify(arr));
+
+	const a: any = {};
+	const b: any = {};
+	a.toJSON = () => ({ b });
+	b.toJSON = () => ({ a });
+	assertEquals(identify(a), identify(a));
+	assertEquals(identify(b), identify(b));
+});
+
 // ~> Dates & RegExps
 
 Deno.test('dates :: equal instants match, different instants differ', () => {

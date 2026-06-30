@@ -1,9 +1,9 @@
 function walk(input: any, seen: any[]): string | undefined {
 	if (input === null) return 'L';
 
-	let out: string, i = 0, keys: any, tmp: any;
+	let out: string, i = 0, keys: any = input, tmp: any = typeof input;
 
-	if ((tmp = typeof input) !== 'object') {
+	if (tmp !== 'object') {
 		if (tmp === 'number') return input - input === 0 ? 'n' + input : 'L';
 		if (tmp === 'string') return 's' + input;
 		if (tmp === 'bigint') return 'n' + input;
@@ -15,18 +15,19 @@ function walk(input: any, seen: any[]): string | undefined {
 	if (!is_arr) {
 		if (input instanceof Date) return 'd' + +input;
 		if (input instanceof RegExp) return 'r' + input.source + input.flags;
-
-		if (typeof input.toJSON === 'function' && !ArrayBuffer.isView(input)) {
-			input = input.toJSON();
-			if (input === null) return 'L';
-			if (typeof input !== 'object') return walk(input, seen);
-			is_arr = Array.isArray(input);
-		}
 	}
 
 	tmp = seen.indexOf(input);
 	if (~tmp) return '~' + (tmp + 1);
-	seen.push(input);
+
+	if (typeof input.toJSON === 'function' && !ArrayBuffer.isView(input)) {
+		input = input.toJSON();
+		if (input === null || typeof input !== 'object') return walk(input, seen);
+		tmp = seen.indexOf(input);
+		if (~tmp) return '~' + (tmp + 1);
+		is_arr = Array.isArray(input);
+	}
+	seen.push(keys);
 
 	if (is_arr) {
 		for (
