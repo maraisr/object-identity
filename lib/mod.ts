@@ -1,13 +1,12 @@
 function walk(input: any, seen: any[]): string | undefined {
 	if (input === null) return 'L';
 
-	let out: string, i = 0, keys: any = input, tmp: any = typeof input;
-
-	if (tmp !== 'object') {
-		if (tmp === 'number') return input - input === 0 ? 'n' + input : 'L';
-		if (tmp === 'string') return 's' + input;
-		if (tmp === 'bigint') return 'n' + input;
-		if (tmp === 'boolean') return input ? 'T' : 'F';
+	let t = typeof input;
+	if (t !== 'object') {
+		if (t === 'number') return input - input === 0 ? 'n' + input : 'L';
+		if (t === 'string') return 's' + input;
+		if (t === 'bigint') return 'n' + input;
+		if (t === 'boolean') return input ? 'T' : 'F';
 		return;
 	}
 
@@ -17,24 +16,34 @@ function walk(input: any, seen: any[]): string | undefined {
 		if (input instanceof RegExp) return 'r' + input.source + input.flags;
 	}
 
-	tmp = seen.indexOf(input);
-	if (~tmp) return '~' + (tmp + 1);
+	let idx = seen.indexOf(input);
+	if (idx !== -1) return '~' + (idx + 1);
 
+	let original = input;
 	if (typeof input.toJSON === 'function' && !ArrayBuffer.isView(input)) {
 		input = input.toJSON();
 		if (input === null || typeof input !== 'object') return walk(input, seen);
-		tmp = seen.indexOf(input);
-		if (~tmp) return '~' + (tmp + 1);
+		idx = seen.indexOf(input);
+		if (idx !== -1) return '~' + (idx + 1);
 		is_arr = Array.isArray(input);
 	}
-	seen.push(keys);
+	seen.push(original);
+
+	let out: string, i = 0, tmp: string | undefined, keys: any;
 
 	if (is_arr) {
-		for (
-			out = 'a';
-			i < input.length;
-			out += (tmp = walk(input[i++], seen)) === undefined ? 'L' : tmp
-		);
+		out = 'a';
+		for (let len = input.length, v: any, vt: any; i < len; i++) {
+			v = input[i];
+			if (v === null) out += 'L';
+			else if ((vt = typeof v) === 'object') {
+				out += (tmp = walk(v, seen)) === undefined ? 'L' : tmp;
+			} else if (vt === 'number') out += v - v === 0 ? 'n' + v : 'L';
+			else if (vt === 'string') out += 's' + v;
+			else if (vt === 'boolean') out += v ? 'T' : 'F';
+			else if (vt === 'bigint') out += 'n' + v;
+			else out += 'L';
+		}
 	} else if (input instanceof Set) {
 		out = 'e';
 		for (let value of input) out += (tmp = walk(value, seen)) === undefined ? 'L' : tmp;
@@ -42,13 +51,21 @@ function walk(input: any, seen: any[]): string | undefined {
 		keys = [...input.keys()];
 		if (keys.length > 1) keys.sort();
 		for (out = 'o'; i < keys.length; i++) {
-			if ((tmp = walk(input.get(keys[i]), seen)) !== undefined) out += keys[i] + tmp;
+			if ((tmp = walk(input.get(keys[i]), seen)) !== undefined) {
+				out += keys[i];
+				out += tmp;
+			}
 		}
 	} else if (input[Symbol.toStringTag] === undefined || ArrayBuffer.isView(input)) {
 		keys = Object.keys(input);
-		if (keys.length > 1) keys.sort();
-		for (out = 'o'; i < keys.length; i++) {
-			if ((tmp = walk(input[keys[i]], seen)) !== undefined) out += keys[i] + tmp;
+		if (keys.length > 32) keys.sort();
+		else sort_keys(keys);
+		out = 'o';
+		for (let k: string; i < keys.length; i++) {
+			if ((tmp = walk(input[k = keys[i]], seen)) !== undefined) {
+				out += k;
+				out += tmp;
+			}
 		}
 	} else {
 		throw new Error('Unsupported value');
@@ -68,5 +85,17 @@ function walk(input: any, seen: any[]): string | undefined {
  * ```
  */
 export function identify<T>(input: T): string {
-	return walk(input, []) ?? 'U';
+	let seen: any[] = [input];
+	seen.pop();
+	return walk(input, seen) ?? 'U';
+}
+
+// ---
+
+function sort_keys(keys: string[]): void {
+	for (let i = 1, j: number, k: string; i < keys.length; i++) {
+		k = keys[i];
+		for (j = i - 1; j >= 0 && keys[j] > k; j--) keys[j + 1] = keys[j];
+		keys[j + 1] = k;
+	}
 }
