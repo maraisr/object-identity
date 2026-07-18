@@ -5,12 +5,13 @@
 	"exports": "./lib/mod.ts",
 	"tasks": {
 		"build": "deno run -A scripts/build.ts",
-		"bench": "deno run -A scripts/bench.ts"
+		"bench": "deno run -A --v8-flags=--expose-gc scripts/bench.ts"
 	},
 	"imports": {
 		"@std/assert": "jsr:@std/assert@^1",
 		"@std/path": "jsr:@std/path@^1",
-		"fast-check": "npm:fast-check@^4"
+		"fast-check": "npm:fast-check@^4",
+		"mitata": "npm:mitata@^1"
 	},
 	"nodeModulesDir": "auto",
 	"minimumDependencyAge": "P3D",

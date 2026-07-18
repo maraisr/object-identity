@@ -196,6 +196,18 @@ Deno.test('toJSON :: array and mutual results still resolve cycles', () => {
 	assertEquals(identify(b), identify(b));
 });
 
+Deno.test('toJSON :: reentrant identify calls use isolated state', () => {
+	let nested = '';
+	const input = {
+		toJSON() {
+			nested = identify({ nested: new Array(80).fill('value') });
+			return { okay: true };
+		},
+	};
+	assertEquals(identify(input), identify({ okay: true }));
+	assertEquals(nested, identify({ nested: new Array(80).fill('value') }));
+});
+
 // ~> Dates & RegExps
 
 Deno.test('dates :: equal instants match, different instants differ', () => {
@@ -254,6 +266,27 @@ Deno.test('arrays :: undefined elements fold into null', () => {
 
 Deno.test('arrays :: adjacent elements keep their own slots', () => {
 	assertNotEquals(identify(['a', 'b']), identify(['ab']));
+});
+
+Deno.test('arrays :: large primitive arrays preserve exact content', () => {
+	const values = Array.from({ length: 64 }, (_, i) => [i, `value-${i}`, i % 2 === 0, null]).flat();
+	assertEquals(identify(values), 'a' + values.map((value) => identify(value)).join(''));
+
+	values[100] = 'café\ud800';
+	assertEquals(identify(values), 'a' + values.map((value) => identify(value)).join(''));
+});
+
+Deno.test('arrays :: large array elements are visited once', () => {
+	const values: unknown[] = new Array(64).fill(null);
+	let reads = 0;
+	Object.defineProperty(values, 32, {
+		get() {
+			reads++;
+			return { nested: true };
+		},
+	});
+	identify(values);
+	assertEquals(reads, 1);
 });
 
 // ~> Objects
@@ -399,6 +432,24 @@ Deno.test('maps :: circular', () => {
 	m.set('e', m);
 	assert(identify(m));
 	assertEquals(identify(m), identify(m));
+});
+
+Deno.test('maps :: value is observed before key coercion', () => {
+	const calls: string[] = [];
+	const key = {
+		toString() {
+			calls.push('key');
+			return 'key';
+		},
+	};
+	const value = {
+		get value() {
+			calls.push('value');
+			return 1;
+		},
+	};
+	identify(new Map([[key, value]]));
+	assertEquals(calls, ['value', 'key']);
 });
 
 // ~> Cross-type behaviour
@@ -639,6 +690,17 @@ Deno.test('robustness :: hashing never pollutes Object.prototype', () => {
 	identify(JSON.parse('{"__proto__":{"polluted":true}}'));
 	identify(JSON.parse('{"constructor":{"prototype":{"polluted":true}}}'));
 	assertEquals(({} as Record<string, unknown>).polluted, undefined);
+});
+
+Deno.test('robustness :: writer state resets after a thrown getter', () => {
+	assertThrows(() =>
+		identify({
+			get value() {
+				throw new Error('boom');
+			},
+		})
+	);
+	assertEquals(identify({ a: 1 }), 'oan1');
 });
 
 // ~> Known limitation
