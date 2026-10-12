@@ -34,7 +34,10 @@ This is free to use software, but if you do like it, consider supporting me ❤�
 ## ⚙️ Install
 
 - **npm** — available as [`object-identity`](https://www.npmjs.com/package/object-identity)
-- **JSR** — available as [`@mr/object-identity`](https://jsr.io/@mr/object-identity)
+
+```sh
+npm add object-identity
+```
 
 ## 🚀 Usage
 

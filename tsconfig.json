@@ -1,0 +1,13 @@
+{
+	"extends": "@marais/tsconfig",
+	"compilerOptions": {
+		"allowJs": false,
+		"checkJs": false,
+		"declaration": true,
+		"isolatedDeclarations": true,
+		"allowImportingTsExtensions": true,
+		"erasableSyntaxOnly": true,
+		"types": ["node"]
+	},
+	"include": ["lib/**/*.ts", "scripts/**/*.ts", "tsdown.config.ts"]
+}

@@ -1,16 +1,18 @@
-import { assert, assertEquals, assertNotEquals, assertNotMatch, assertThrows } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import fc from 'fast-check';
 import { Buffer } from 'node:buffer';
 import { identify } from '../lib/mod.ts';
 
-Deno.test('exports :: identify is a function', () => {
-	assertEquals(typeof identify, 'function');
+test('exports :: identify is a function', () => {
+	assert.deepEqual(typeof identify, 'function');
 });
 
 // ~> Primitives
 
-Deno.test('primitives :: are deterministic', () => {
-	const stable = (v: unknown) => assertEquals(identify(v), identify(v), `${String(v)} is unstable`);
+test('primitives :: are deterministic', () => {
+	const stable = (v: unknown) =>
+		assert.deepEqual(identify(v), identify(v), `${String(v)} is unstable`);
 	stable('hello');
 	stable('');
 	stable(0);
@@ -27,113 +29,116 @@ Deno.test('primitives :: are deterministic', () => {
 	stable(123n);
 });
 
-Deno.test('primitives :: distinct values are distinct', () => {
-	assertNotEquals(identify(1), identify(2));
-	assertNotEquals(identify('a'), identify('b'));
-	assertNotEquals(identify(true), identify(false));
-	assertNotEquals(identify(1.5), identify(1.50001));
-	assertNotEquals(identify(''), identify(' '));
+test('primitives :: distinct values are distinct', () => {
+	assert.notDeepEqual(identify(1), identify(2));
+	assert.notDeepEqual(identify('a'), identify('b'));
+	assert.notDeepEqual(identify(true), identify(false));
+	assert.notDeepEqual(identify(1.5), identify(1.50001));
+	assert.notDeepEqual(identify(''), identify(' '));
 });
 
-Deno.test('primitives :: are distinct from their string form', () => {
+test('primitives :: are distinct from their string form', () => {
 	// A number, boolean, or null is its own thing, never its text spelling.
-	assertNotEquals(identify(1), identify('1'));
-	assertEquals(identify('1'), identify('1'));
-	assertNotEquals(identify(true), identify('true'));
-	assertNotEquals(identify(null), identify('null'));
-	assertNotEquals(identify(undefined), identify('undefined'));
+	assert.notDeepEqual(identify(1), identify('1'));
+	assert.deepEqual(identify('1'), identify('1'));
+	assert.notDeepEqual(identify(true), identify('true'));
+	assert.notDeepEqual(identify(null), identify('null'));
+	assert.notDeepEqual(identify(undefined), identify('undefined'));
 });
 
-Deno.test('strings :: preserve exact content', () => {
-	assertEquals(identify('café'), identify('café'));
-	assertEquals(identify('a\n\t"b'), identify('a\n\t"b'));
-	assertNotEquals(identify('a'), identify('A'));
-	assertNotEquals(identify('ab'), identify('a b'));
+test('strings :: preserve exact content', () => {
+	assert.deepEqual(identify('café'), identify('café'));
+	assert.deepEqual(identify('a\n\t"b'), identify('a\n\t"b'));
+	assert.notDeepEqual(identify('a'), identify('A'));
+	assert.notDeepEqual(identify('ab'), identify('a b'));
 	// A unicode round-trip over a wide range stays deterministic.
 	for (let i = 0; i < 0x2000; i += 7) {
 		const s = String.fromCharCode(i);
-		assertEquals(identify(s), identify(s));
+		assert.deepEqual(identify(s), identify(s));
 	}
 });
 
-Deno.test('numbers :: float precision is retained', () => {
-	assertEquals(identify(0.1 + 0.2), identify(0.30000000000000004));
-	assertNotEquals(identify(0.1 + 0.2), identify(0.3));
-	assertNotEquals(identify(1), identify(1.0000000000000002));
+test('numbers :: float precision is retained', () => {
+	assert.deepEqual(identify(0.1 + 0.2), identify(0.30000000000000004));
+	assert.notDeepEqual(identify(0.1 + 0.2), identify(0.3));
+	assert.notDeepEqual(identify(1), identify(1.0000000000000002));
 });
 
-Deno.test('numbers :: signed zero collapses', () => {
+test('numbers :: signed zero collapses', () => {
 	// -0 and 0 are conventionally the same value.
-	assertEquals(identify(-0), identify(0));
+	assert.deepEqual(identify(-0), identify(0));
 });
 
-Deno.test('numbers :: non-finite values fold into null', () => {
-	assertEquals(identify(NaN), identify(null));
-	assertEquals(identify(Infinity), identify(null));
-	assertEquals(identify(-Infinity), identify(null));
+test('numbers :: non-finite values fold into null', () => {
+	assert.deepEqual(identify(NaN), identify(null));
+	assert.deepEqual(identify(Infinity), identify(null));
+	assert.deepEqual(identify(-Infinity), identify(null));
 });
 
-Deno.test('bigint :: matches the equivalent number', () => {
-	assertEquals(identify(1n), identify(1));
-	assertEquals(identify(42n), identify(42));
-	assertEquals(identify(0n), identify(0));
+test('bigint :: matches the equivalent number', () => {
+	assert.deepEqual(identify(1n), identify(1));
+	assert.deepEqual(identify(42n), identify(42));
+	assert.deepEqual(identify(0n), identify(0));
 });
 
-Deno.test('symbols :: dropped like JSON.stringify', () => {
+test('symbols :: dropped like JSON.stringify', () => {
 	// Symbols have no real representation; they are omitted as object/map values
 	// and fold to null in array/set positions, matching JSON.stringify.
-	assertEquals(identify({ a: 1, s: Symbol() }), identify({ a: 1 }));
-	assertEquals(identify({ a: 1, s: Symbol('x') }), identify({ a: 1 }));
-	assertEquals(identify([1, Symbol(), 2]), identify([1, null, 2]));
+	assert.deepEqual(identify({ a: 1, s: Symbol() }), identify({ a: 1 }));
+	assert.deepEqual(identify({ a: 1, s: Symbol('x') }), identify({ a: 1 }));
+	assert.deepEqual(identify([1, Symbol(), 2]), identify([1, null, 2]));
 	// A bare symbol canonicalizes to the same marker as a bare undefined.
-	assertEquals(identify(Symbol()), identify(undefined));
-	assertEquals(identify(Symbol('x')), identify(undefined));
+	assert.deepEqual(identify(Symbol()), identify(undefined));
+	assert.deepEqual(identify(Symbol('x')), identify(undefined));
 });
 
-Deno.test('functions :: dropped like JSON.stringify', () => {
+test('functions :: dropped like JSON.stringify', () => {
 	// Functions have no real representation; same drop rules as symbols/undefined.
-	assertEquals(identify({ a: 1, f: () => {} }), identify({ a: 1 }));
-	assertEquals(identify([1, () => {}, 2]), identify([1, null, 2]));
+	assert.deepEqual(identify({ a: 1, f: () => {} }), identify({ a: 1 }));
+	assert.deepEqual(identify([1, () => {}, 2]), identify([1, null, 2]));
 	// Distinct function bodies are indistinguishable once dropped.
-	assertEquals(identify({ f: () => 1 }), identify({ f: () => 2 }));
-	assertEquals(identify({ f() {} }), identify({}));
+	assert.deepEqual(identify({ f: () => 1 }), identify({ f: () => 2 }));
+	assert.deepEqual(identify({ f() {} }), identify({}));
 	// A bare function canonicalizes to the same marker as a bare undefined.
-	assertEquals(identify(() => {}), identify(undefined));
+	assert.deepEqual(
+		identify(() => {}),
+		identify(undefined),
+	);
 });
 
 // ~> toJSON
 
-Deno.test('toJSON :: result is serialized in place', () => {
-	assertEquals(identify({ toJSON: () => ({ a: 1, b: [2] }) }), identify({ a: 1, b: [2] }));
-	assertEquals(identify({ ignored: 99, toJSON: () => ({ a: 1 }) }), identify({ a: 1 }));
+test('toJSON :: result is serialized in place', () => {
+	assert.deepEqual(identify({ toJSON: () => ({ a: 1, b: [2] }) }), identify({ a: 1, b: [2] }));
+	assert.deepEqual(identify({ ignored: 99, toJSON: () => ({ a: 1 }) }), identify({ a: 1 }));
 	// Primitive and undefined results behave like that primitive / a drop.
-	assertEquals(identify({ toJSON: () => 42 }), identify(42));
-	assertEquals(identify({ toJSON: () => 'x' }), identify('x'));
-	assertEquals(identify({ a: 1, b: { toJSON: () => undefined } }), identify({ a: 1 }));
+	assert.deepEqual(identify({ toJSON: () => 42 }), identify(42));
+	assert.deepEqual(identify({ toJSON: () => 'x' }), identify('x'));
+	assert.deepEqual(identify({ a: 1, b: { toJSON: () => undefined } }), identify({ a: 1 }));
 });
 
-Deno.test('toJSON :: URL serializes as its href', () => {
-	assertEquals(
+test('toJSON :: URL serializes as its href', () => {
+	assert.deepEqual(
 		identify(new URL('https://example.com/a?b=1#c')),
 		identify('https://example.com/a?b=1#c'),
 	);
-	assertEquals(identify(new URL('https://a.test/')), identify(new URL('https://a.test/')));
-	assertNotEquals(identify(new URL('https://a.test/')), identify(new URL('https://b.test/')));
+	assert.deepEqual(identify(new URL('https://a.test/')), identify(new URL('https://a.test/')));
+	assert.notDeepEqual(identify(new URL('https://a.test/')), identify(new URL('https://b.test/')));
 });
 
-Deno.test('toJSON :: builtins with special forms ignore toJSON', () => {
-	assertEquals(identify(new Date(0)), 'd0');
-	assertNotEquals(identify(new Date(0)), identify(new Date(0).toJSON()));
-	assertEquals(identify(Buffer.from([1, 2])), identify(new Uint8Array([1, 2])));
+test('toJSON :: builtins with special forms ignore toJSON', () => {
+	assert.deepEqual(identify(new Date(0)), 'd0');
+	assert.notDeepEqual(identify(new Date(0)), identify(new Date(0).toJSON()));
+	assert.deepEqual(identify(Buffer.from([1, 2])), identify(new Uint8Array([1, 2])));
 });
 
-Deno.test('toJSON :: only applied once, like JSON.stringify', () => {
+test('toJSON :: only applied once, like JSON.stringify', () => {
 	const o: any = { a: 1 };
 	o.toJSON = () => o;
-	assertEquals(identify(o), identify({ a: 1 }));
+	assert.deepEqual(identify(o), identify({ a: 1 }));
 });
 
-Deno.test('toJSON :: result cycling back to the original does not overflow', () => {
+test('toJSON :: result cycling back to the original does not overflow', () => {
 	const fresh: any = {};
 	fresh.toJSON = () => ({ wrap: fresh });
 
@@ -141,34 +146,34 @@ Deno.test('toJSON :: result cycling back to the original does not overflow', () 
 	const wrapper = { wrap: stable };
 	stable.toJSON = () => wrapper;
 
-	assertEquals(identify(fresh), identify(fresh));
-	assertEquals(identify(fresh), identify(stable));
+	assert.deepEqual(identify(fresh), identify(fresh));
+	assert.deepEqual(identify(fresh), identify(stable));
 });
 
-Deno.test('toJSON :: result resolving to an ancestor closes the cycle', () => {
+test('toJSON :: result resolving to an ancestor closes the cycle', () => {
 	const getter: any = {
 		get g() {
 			return { toJSON: () => getter };
 		},
 	};
 	assert(identify(getter));
-	assertEquals(identify(getter), identify(getter));
+	assert.deepEqual(identify(getter), identify(getter));
 
 	const parent: any = {};
 	const child: any = { toJSON: () => parent };
 	parent.child = child;
 	assert(identify(parent));
-	assertEquals(identify(parent), identify(parent));
+	assert.deepEqual(identify(parent), identify(parent));
 
 	const root: any = {};
 	const mid: any = {};
 	root.mid = mid;
 	mid.leaf = { toJSON: () => root };
 	assert(identify(root));
-	assertEquals(identify(root), identify(root));
+	assert.deepEqual(identify(root), identify(root));
 });
 
-Deno.test('toJSON :: ancestor cycles resolve through every container', () => {
+test('toJSON :: ancestor cycles resolve through every container', () => {
 	const viaSet: any = { s: new Set() };
 	viaSet.s.add({ toJSON: () => viaSet });
 
@@ -178,262 +183,286 @@ Deno.test('toJSON :: ancestor cycles resolve through every container', () => {
 	const viaArray: any = { arr: [] as unknown[] };
 	viaArray.arr.push({ toJSON: () => viaArray });
 
-	assertEquals(identify(viaSet), identify(viaSet));
-	assertEquals(identify(viaMap), identify(viaMap));
-	assertEquals(identify(viaArray), identify(viaArray));
+	assert.deepEqual(identify(viaSet), identify(viaSet));
+	assert.deepEqual(identify(viaMap), identify(viaMap));
+	assert.deepEqual(identify(viaArray), identify(viaArray));
 });
 
-Deno.test('toJSON :: array and mutual results still resolve cycles', () => {
+test('toJSON :: array and mutual results still resolve cycles', () => {
 	const arr: any = {};
 	arr.toJSON = () => [arr];
-	assertEquals(identify(arr), identify(arr));
+	assert.deepEqual(identify(arr), identify(arr));
 
 	const a: any = {};
 	const b: any = {};
 	a.toJSON = () => ({ b });
 	b.toJSON = () => ({ a });
-	assertEquals(identify(a), identify(a));
-	assertEquals(identify(b), identify(b));
+	assert.deepEqual(identify(a), identify(a));
+	assert.deepEqual(identify(b), identify(b));
 });
 
 // ~> Dates & RegExps
 
-Deno.test('dates :: equal instants match, different instants differ', () => {
-	assertEquals(identify(new Date(0)), identify(new Date(0)));
-	assertEquals(identify(new Date(1700000000000)), identify(new Date(1700000000000)));
-	assertNotEquals(identify(new Date(0)), identify(new Date(1)));
+test('dates :: equal instants match, different instants differ', () => {
+	assert.deepEqual(identify(new Date(0)), identify(new Date(0)));
+	assert.deepEqual(identify(new Date(1700000000000)), identify(new Date(1700000000000)));
+	assert.notDeepEqual(identify(new Date(0)), identify(new Date(1)));
 });
 
-Deno.test('dates :: are distinct from their numeric timestamp', () => {
-	assertNotEquals(identify(new Date(0)), identify(0));
+test('dates :: are distinct from their numeric timestamp', () => {
+	assert.notDeepEqual(identify(new Date(0)), identify(0));
 });
 
-Deno.test('regexps :: source and flags both matter', () => {
-	assertEquals(identify(/abc/gi), identify(/abc/gi));
-	assertNotEquals(identify(/a/), identify(/b/));
-	assertNotEquals(identify(/a/), identify(/a/g));
-	assertNotEquals(identify(/a/gi), identify(/a/g));
+test('regexps :: source and flags both matter', () => {
+	assert.deepEqual(identify(/abc/gi), identify(/abc/gi));
+	assert.notDeepEqual(identify(/a/), identify(/b/));
+	assert.notDeepEqual(identify(/a/), identify(/a/g));
+	assert.notDeepEqual(identify(/a/gi), identify(/a/g));
 });
 
 // ~> Arrays
 
-Deno.test('arrays :: flat equality', () => {
-	assertEquals(identify([1, 2, 3]), identify([1, 2, 3]));
+test('arrays :: flat equality', () => {
+	assert.deepEqual(identify([1, 2, 3]), identify([1, 2, 3]));
 });
 
-Deno.test('arrays :: empty', () => {
-	assertEquals(identify([]), identify([]));
-	assertNotEquals(identify([]), identify([0]));
+test('arrays :: empty', () => {
+	assert.deepEqual(identify([]), identify([]));
+	assert.notDeepEqual(identify([]), identify([0]));
 });
 
-Deno.test('arrays :: order is significant', () => {
-	assertNotEquals(identify([3, 2, 1]), identify([1, 2, 3]));
+test('arrays :: order is significant', () => {
+	assert.notDeepEqual(identify([3, 2, 1]), identify([1, 2, 3]));
 });
 
-Deno.test('arrays :: nested', () => {
-	assertEquals(
-		identify([[3, 2, 1], [1, 2, 3]]),
-		identify([[3, 2, 1], [1, 2, 3]]),
+test('arrays :: nested', () => {
+	assert.deepEqual(
+		identify([
+			[3, 2, 1],
+			[1, 2, 3],
+		]),
+		identify([
+			[3, 2, 1],
+			[1, 2, 3],
+		]),
 	);
-	assertNotEquals(
-		identify([[1], [2, 3]]),
-		identify([[1, 2], [3]]),
-	);
+	assert.notDeepEqual(identify([[1], [2, 3]]), identify([[1, 2], [3]]));
 });
 
-Deno.test('arrays :: circular', () => {
+test('arrays :: circular', () => {
 	const arr: unknown[] = [1, 2, 3];
 	arr.push(arr);
 	assert(identify(arr));
-	assertEquals(identify(arr), identify(arr));
+	assert.deepEqual(identify(arr), identify(arr));
 });
 
-Deno.test('arrays :: undefined elements fold into null', () => {
-	assertEquals(identify([1, undefined, 2]), identify([1, null, 2]));
+test('arrays :: undefined elements fold into null', () => {
+	assert.deepEqual(identify([1, undefined, 2]), identify([1, null, 2]));
 });
 
-Deno.test('arrays :: adjacent elements keep their own slots', () => {
-	assertNotEquals(identify(['a', 'b']), identify(['ab']));
+test('arrays :: adjacent elements keep their own slots', () => {
+	assert.notDeepEqual(identify(['a', 'b']), identify(['ab']));
 });
 
 // ~> Objects
 
-Deno.test('objects :: basic equality', () => {
-	assertEquals(identify({ foo: 'bar' }), identify({ foo: 'bar' }));
+test('objects :: basic equality', () => {
+	assert.deepEqual(identify({ foo: 'bar' }), identify({ foo: 'bar' }));
 });
 
-Deno.test('objects :: empty', () => {
-	assertEquals(identify({}), identify({}));
-	assertEquals(identify({}), identify({ a: undefined }));
+test('objects :: empty', () => {
+	assert.deepEqual(identify({}), identify({}));
+	assert.deepEqual(identify({}), identify({ a: undefined }));
 });
 
-Deno.test('objects :: undefined values are dropped', () => {
-	assertEquals(
-		identify({ a: 1, c: undefined, b: 'hello' }),
-		identify({ a: 1, b: 'hello' }),
-	);
+test('objects :: undefined values are dropped', () => {
+	assert.deepEqual(identify({ a: 1, c: undefined, b: 'hello' }), identify({ a: 1, b: 'hello' }));
 });
 
-Deno.test('objects :: key order does not matter', () => {
-	assertEquals(
-		identify({ one: 'one', two: 'two' }),
-		identify({ two: 'two', one: 'one' }),
-	);
+test('objects :: key order does not matter', () => {
+	assert.deepEqual(identify({ one: 'one', two: 'two' }), identify({ two: 'two', one: 'one' }));
 });
 
-Deno.test('objects :: numeric-like keys order independent', () => {
-	assertEquals(identify({ 10: 'a', 2: 'b' }), identify({ 2: 'b', 10: 'a' }));
+test('objects :: numeric-like keys order independent', () => {
+	assert.deepEqual(identify({ 10: 'a', 2: 'b' }), identify({ 2: 'b', 10: 'a' }));
 });
 
-Deno.test('objects :: nested, key order does not matter at any depth', () => {
-	assertEquals(
+test('objects :: nested, key order does not matter at any depth', () => {
+	assert.deepEqual(
 		identify({ a: { b: 'c' }, d: { e: { f: 'g' } } }),
 		identify({ d: { e: { f: 'g' } }, a: { b: 'c' } }),
 	);
 });
 
-Deno.test('objects :: different values differ', () => {
-	assertNotEquals(identify({ a: 1, b: 2 }), identify({ a: 1, b: 3 }));
-	assertNotEquals(identify({ a: 1 }), identify({ a: 1, b: 2 }));
+test('objects :: different values differ', () => {
+	assert.notDeepEqual(identify({ a: 1, b: 2 }), identify({ a: 1, b: 3 }));
+	assert.notDeepEqual(identify({ a: 1 }), identify({ a: 1, b: 2 }));
 });
 
-Deno.test('objects :: circular', () => {
+test('objects :: circular', () => {
 	const o: Record<string, unknown> = { a: 'b' };
 	o.c = o;
 	assert(identify(o));
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('objects :: partial circular', () => {
+test('objects :: partial circular', () => {
 	const o = { v: 1 };
 	const a = ['a', o];
-	assertEquals(identify(a), identify(a));
+	assert.deepEqual(identify(a), identify(a));
 });
 
-Deno.test('objects :: class instances hash by their own keys', () => {
+test('objects :: class instances hash by their own keys', () => {
 	class Foo {
 		a = 1;
 		b = 2;
 	}
-	assertEquals(identify(new Foo()), identify(new Foo()));
-	assertEquals(identify(new Foo()), identify({ a: 1, b: 2 }));
+	assert.deepEqual(identify(new Foo()), identify(new Foo()));
+	assert.deepEqual(identify(new Foo()), identify({ a: 1, b: 2 }));
 });
 
-Deno.test('objects :: null-prototype objects are supported', () => {
+test('objects :: null-prototype objects are supported', () => {
 	const nullProto = Object.assign(Object.create(null), { a: 1, b: 2 });
-	assertEquals(identify(nullProto), identify({ a: 1, b: 2 }));
+	assert.deepEqual(identify(nullProto), identify({ a: 1, b: 2 }));
 });
 
-Deno.test('objects :: a literal "constructor" key still hashes', () => {
-	assertEquals(identify({ constructor: 1 }), identify({ constructor: 1 }));
-	assertNotEquals(identify({ constructor: 1 }), identify({ constructor: 2 }));
+test('objects :: a literal "constructor" key still hashes', () => {
+	assert.deepEqual(identify({ constructor: 1 }), identify({ constructor: 1 }));
+	assert.notDeepEqual(identify({ constructor: 1 }), identify({ constructor: 2 }));
 });
 
-Deno.test('objects :: null object and null property', () => {
-	assertEquals(identify(null), identify(null));
-	assertEquals(identify({ f: null }), identify({ f: null }));
+test('objects :: null object and null property', () => {
+	assert.deepEqual(identify(null), identify(null));
+	assert.deepEqual(identify({ f: null }), identify({ f: null }));
 	// A null value is distinct from a missing key.
-	assertNotEquals(identify({ f: null }), identify({}));
+	assert.notDeepEqual(identify({ f: null }), identify({}));
 });
 
-Deno.test('objects :: deterministic key sorting', () => {
-	assertEquals(identify({ b: 2, c: 3, a: 1 }), identify({ a: 1, b: 2, c: 3 }));
+test('objects :: deterministic key sorting', () => {
+	assert.deepEqual(identify({ b: 2, c: 3, a: 1 }), identify({ a: 1, b: 2, c: 3 }));
 });
 
 // ~> Sets
 
-Deno.test('sets :: order is significant', () => {
-	assertNotEquals(identify(new Set([1, 2, 3])), identify(new Set([3, 2, 1])));
+test('sets :: order is significant', () => {
+	assert.notDeepEqual(identify(new Set([1, 2, 3])), identify(new Set([3, 2, 1])));
 });
 
-Deno.test('sets :: order is significant for object members', () => {
-	assertNotEquals(
+test('sets :: order is significant for object members', () => {
+	assert.notDeepEqual(
 		identify(new Set([{ a: 'a' }, { b: 'b' }])),
 		identify(new Set([{ b: 'b' }, { a: 'a' }])),
 	);
 });
 
-Deno.test('sets :: nested', () => {
-	assertEquals(
+test('sets :: nested', () => {
+	assert.deepEqual(
 		identify(new Set([new Set([1]), new Set([2])])),
 		identify(new Set([new Set([1]), new Set([2])])),
 	);
 });
 
-Deno.test('sets :: circular', () => {
+test('sets :: circular', () => {
 	const s: Set<unknown> = new Set([1, 2, 3]);
 	s.add(s);
 	assert(identify(s));
-	assertEquals(identify(s), identify(s));
+	assert.deepEqual(identify(s), identify(s));
 });
 
 // ~> Maps
 
-Deno.test('maps :: key order does not matter', () => {
-	assertEquals(
-		identify(new Map([['a', 'b'], ['c', 'd']])),
-		identify(new Map([['c', 'd'], ['a', 'b']])),
+test('maps :: key order does not matter', () => {
+	assert.deepEqual(
+		identify(
+			new Map([
+				['a', 'b'],
+				['c', 'd'],
+			]),
+		),
+		identify(
+			new Map([
+				['c', 'd'],
+				['a', 'b'],
+			]),
+		),
 	);
 });
 
-Deno.test('maps :: single entry (fast path) is stable', () => {
-	assertEquals(identify(new Map([['z', 1]])), identify(new Map([['z', 1]])));
+test('maps :: single entry (fast path) is stable', () => {
+	assert.deepEqual(identify(new Map([['z', 1]])), identify(new Map([['z', 1]])));
 });
 
-Deno.test('maps :: mixed key types, order independent', () => {
-	assertEquals(
-		identify(new Map<unknown, unknown>([['a', 1], [2, 'b'], ['c', 3]])),
-		identify(new Map<unknown, unknown>([[2, 'b'], ['c', 3], ['a', 1]])),
+test('maps :: mixed key types, order independent', () => {
+	assert.deepEqual(
+		identify(
+			new Map<unknown, unknown>([
+				['a', 1],
+				[2, 'b'],
+				['c', 3],
+			]),
+		),
+		identify(
+			new Map<unknown, unknown>([
+				[2, 'b'],
+				['c', 3],
+				['a', 1],
+			]),
+		),
 	);
 });
 
-Deno.test('maps :: different values differ', () => {
-	assertNotEquals(
-		identify(new Map([['a', 1]])),
-		identify(new Map([['a', 2]])),
-	);
+test('maps :: different values differ', () => {
+	assert.notDeepEqual(identify(new Map([['a', 1]])), identify(new Map([['a', 2]])));
 });
 
-Deno.test('maps :: circular', () => {
-	const m: Map<string, unknown> = new Map([['a', 'b'], ['c', 'd']]);
+test('maps :: circular', () => {
+	const m: Map<string, unknown> = new Map([
+		['a', 'b'],
+		['c', 'd'],
+	]);
 	m.set('e', m);
 	assert(identify(m));
-	assertEquals(identify(m), identify(m));
+	assert.deepEqual(identify(m), identify(m));
 });
 
 // ~> Cross-type behaviour
 
-Deno.test('cross-type :: a Map matches the equivalent plain object', () => {
-	assertEquals(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
-	assertEquals(
+test('cross-type :: a Map matches the equivalent plain object', () => {
+	assert.deepEqual(identify({ a: 'b' }), identify(new Map([['a', 'b']])));
+	assert.deepEqual(
 		identify({ a: 1, b: 2 }),
-		identify(new Map<string, number>([['a', 1], ['b', 2]])),
+		identify(
+			new Map<string, number>([
+				['a', 1],
+				['b', 2],
+			]),
+		),
 	);
 });
 
-Deno.test('cross-type :: objects and arrays are distinct', () => {
-	assertNotEquals(identify({ a: 'b' }), identify(['a', 'b']));
-	assertNotEquals(identify({}), identify([]));
+test('cross-type :: objects and arrays are distinct', () => {
+	assert.notDeepEqual(identify({ a: 'b' }), identify(['a', 'b']));
+	assert.notDeepEqual(identify({}), identify([]));
 });
 
-Deno.test('cross-type :: a Set is distinct from an Array', () => {
-	assertNotEquals(identify(new Set([1, 2, 3])), identify([1, 2, 3]));
+test('cross-type :: a Set is distinct from an Array', () => {
+	assert.notDeepEqual(identify(new Set([1, 2, 3])), identify([1, 2, 3]));
 });
 
-Deno.test('cross-type :: a typed array matches the equivalent index-keyed object', () => {
-	assertEquals(identify(new Uint8Array([1, 2])), identify({ 0: 1, 1: 2 }));
-	assertEquals(identify(new Uint8Array([])), identify({}));
-	assertEquals(identify(new Uint8Array([1, 2])), identify(new Int16Array([1, 2])));
+test('cross-type :: a typed array matches the equivalent index-keyed object', () => {
+	assert.deepEqual(identify(new Uint8Array([1, 2])), identify({ 0: 1, 1: 2 }));
+	assert.deepEqual(identify(new Uint8Array([])), identify({}));
+	assert.deepEqual(identify(new Uint8Array([1, 2])), identify(new Int16Array([1, 2])));
 });
 
 // ~> Circular & shared references
 
-Deno.test('refs :: circular ids are consistent regardless of visitation order', () => {
+test('refs :: circular ids are consistent regardless of visitation order', () => {
 	let o: Record<string, unknown> = { a: 1, c: 2 };
 	o.b = o;
 	o.d = new Map(); // the map is seen 2nd
 	(o.d as Map<string, unknown>).set('x', o.d);
-	assertEquals(Object.keys(o), ['a', 'c', 'b', 'd']);
+	assert.deepEqual(Object.keys(o), ['a', 'c', 'b', 'd']);
 	const a = identify(o);
 
 	o = { a: 1 };
@@ -441,100 +470,97 @@ Deno.test('refs :: circular ids are consistent regardless of visitation order', 
 	(o.d as Map<string, unknown>).set('x', o.d);
 	o.b = o;
 	o.c = 2;
-	assertEquals(Object.keys(o), ['a', 'd', 'b', 'c']);
+	assert.deepEqual(Object.keys(o), ['a', 'd', 'b', 'c']);
 	const b = identify(o);
 
-	assertEquals(a, b, `${a} === ${b}`);
+	assert.deepEqual(a, b, `${a} === ${b}`);
 });
 
-Deno.test('refs :: deeply nested circular objects are equal', () => {
+test('refs :: deeply nested circular objects are equal', () => {
 	const build = () => {
 		const o: Record<string, any> = { b: { c: 123 } };
 		o.b.d = o;
 		o.x = [9, o.b];
 		return o;
 	};
-	assertEquals(identify(build()), identify(build()));
+	assert.deepEqual(identify(build()), identify(build()));
 });
 
-Deno.test('refs :: a shared reference equals two distinct equal instances', () => {
+test('refs :: a shared reference equals two distinct equal instances', () => {
 	const shared = { v: 1 };
-	assertEquals(
-		identify({ x: shared, y: shared }),
-		identify({ x: { v: 1 }, y: { v: 1 } }),
-	);
+	assert.deepEqual(identify({ x: shared, y: shared }), identify({ x: { v: 1 }, y: { v: 1 } }));
 });
 
-Deno.test('refs :: each distinct node is only back-referenced when reused', () => {
+test('refs :: each distinct node is only back-referenced when reused', () => {
 	const hash = identify({
 		a: [[1], [2], [3]],
 		b: new Set([new Set([1]), new Set([2]), new Set([3])]),
 	});
-	assertNotMatch(hash, /~\d+/);
+	assert.doesNotMatch(hash, /~\d+/);
 });
 
-Deno.test('refs :: circular reference to root', () => {
+test('refs :: circular reference to root', () => {
 	const o: any = { id: 123 };
 	o.self = o;
 	assert(identify(o));
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('refs :: nested circular reference to root', () => {
+test('refs :: nested circular reference to root', () => {
 	// A back-reference buried under a node, plus an awkward string to escape.
 	const o: any = { label: 'a\n\t"b' };
 	o.inner = { root: o };
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('refs :: child circular reference', () => {
+test('refs :: child circular reference', () => {
 	const o: any = { id: 1, child: { id: 2 } };
 	o.child.self = o.child;
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('refs :: nested child circular reference', () => {
+test('refs :: nested child circular reference', () => {
 	const o: any = { id: 1, child: { id: 2 } };
 	o.child.wrap = { ref: o.child };
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('refs :: circular objects in an array', () => {
+test('refs :: circular objects in an array', () => {
 	const o: any = { id: 123 };
 	o.list = [o, o];
-	assertEquals(identify(o), identify(o));
+	assert.deepEqual(identify(o), identify(o));
 });
 
-Deno.test('refs :: nested circular references in an array', () => {
+test('refs :: nested circular references in an array', () => {
 	const build = () => {
 		const o: any = { items: [{ foo: 1 }, { bar: 2 }] };
 		o.items[0].self = o.items[0];
 		o.items[1].self = o.items[1];
 		return o;
 	};
-	assertEquals(identify(build()), identify(build()));
+	assert.deepEqual(identify(build()), identify(build()));
 });
 
-Deno.test('refs :: circular arrays', () => {
+test('refs :: circular arrays', () => {
 	const fixture: any = [];
 	fixture.push(fixture, fixture);
 	assert(identify(fixture));
-	assertEquals(identify(fixture), identify(fixture));
+	assert.deepEqual(identify(fixture), identify(fixture));
 });
 
-Deno.test('refs :: nested circular arrays', () => {
+test('refs :: nested circular arrays', () => {
 	const build = () => {
 		const arr: any = [];
 		arr.push({ foo: 1, back: arr }, { bar: 2, back: arr });
 		return arr;
 	};
-	assertEquals(identify(build()), identify(build()));
+	assert.deepEqual(identify(build()), identify(build()));
 });
 
-Deno.test('refs :: repeated non-circular references in objects', () => {
+test('refs :: repeated non-circular references in objects', () => {
 	// One shared node behind three keys hashes like three separate equal nodes.
 	const shared = { foo: 1, bar: 'abc' };
-	assertEquals(
+	assert.deepEqual(
 		identify({ a: shared, b: shared, c: shared }),
 		identify({
 			a: { foo: 1, bar: 'abc' },
@@ -544,12 +570,9 @@ Deno.test('refs :: repeated non-circular references in objects', () => {
 	);
 });
 
-Deno.test('refs :: repeated non-circular references in arrays', () => {
+test('refs :: repeated non-circular references in arrays', () => {
 	const shared = { foo: 1 };
-	assertEquals(
-		identify([shared, shared]),
-		identify([{ foo: 1 }, { foo: 1 }]),
-	);
+	assert.deepEqual(identify([shared, shared]), identify([{ foo: 1 }, { foo: 1 }]));
 });
 
 // ~> On-the-wire format
@@ -557,9 +580,9 @@ Deno.test('refs :: repeated non-circular references in arrays', () => {
 // These lock the exact serialization. A change here is a breaking change to every
 // previously-stored identity, so update deliberately.
 
-Deno.test('format :: supported builtins serialize consistently', () => {
+test('format :: supported builtins serialize consistently', () => {
 	const assertWire = (name: string, input: unknown, expected: string) =>
-		assertEquals(identify(input), expected, name);
+		assert.deepEqual(identify(input), expected, name);
 
 	assertWire('array', [1, undefined, 'x'], 'an1Lsx');
 	assertWire('bigint', 123n, 'n123');
@@ -574,7 +597,14 @@ Deno.test('format :: supported builtins serialize consistently', () => {
 	assertWire('int8 array', new Int8Array([-1, 2]), 'o0n-11n2');
 	assertWire('int16 array', new Int16Array([-1, 2]), 'o0n-11n2');
 	assertWire('int32 array', new Int32Array([-1, 2]), 'o0n-11n2');
-	assertWire('map', new Map([['b', 2], ['a', 1]]), 'oan1bn2');
+	assertWire(
+		'map',
+		new Map([
+			['b', 2],
+			['a', 1],
+		]),
+		'oan1bn2',
+	);
 	assertWire('null', null, 'L');
 	assertWire('object', { b: 2, a: 1 }, 'oan1bn2');
 	assertWire('regexp', /ab/gi, 'rabgi');
@@ -588,24 +618,24 @@ Deno.test('format :: supported builtins serialize consistently', () => {
 	assertWire('url', new URL('https://example.com/a?b=1#c'), 'shttps://example.com/a?b=1#c');
 });
 
-Deno.test('format :: circular array back-reference', () => {
+test('format :: circular array back-reference', () => {
 	const arr: unknown[] = [1, 2, 3];
 	arr.push(arr);
-	assertEquals(identify(arr), 'an1n2n3~1');
+	assert.deepEqual(identify(arr), 'an1n2n3~1');
 });
 
-Deno.test('format :: every element is visited exactly once', () => {
+test('format :: every element is visited exactly once', () => {
 	const c: unknown[] = [1];
 	c.push(c);
 	const hash = identify({
 		a: { b: ['c', new Set(['d', new Map([['e', 'f']]), c, 'g'])] },
 	});
-	assertEquals(hash, 'oaobascesdoesfan1~5sg');
+	assert.deepEqual(hash, 'oaobascesdoesfan1~5sg');
 });
 
 // ~> Robustness
 
-Deno.test('robustness :: very deep input does not overflow', () => {
+test('robustness :: very deep input does not overflow', () => {
 	let root: Record<string, any> = {};
 	let node = root;
 	for (let i = 0; i < 1000; i++) {
@@ -614,38 +644,38 @@ Deno.test('robustness :: very deep input does not overflow', () => {
 		node = node.child;
 	}
 	assert(identify(root));
-	assertEquals(identify(root), identify(root));
+	assert.deepEqual(identify(root), identify(root));
 });
 
-Deno.test('robustness :: unsupported builtins throw', () => {
-	assertThrows(() => identify(new WeakMap()));
-	assertThrows(() => identify(new WeakSet()));
-	assertThrows(() => identify(Promise.resolve()));
-	assertThrows(() => identify(new ArrayBuffer(8)));
+test('robustness :: unsupported builtins throw', () => {
+	assert.throws(() => identify(new WeakMap()));
+	assert.throws(() => identify(new WeakSet()));
+	assert.throws(() => identify(Promise.resolve()));
+	assert.throws(() => identify(new ArrayBuffer(8)));
 });
 
-Deno.test('robustness :: does not mutate the input', () => {
+test('robustness :: does not mutate the input', () => {
 	const child: any = { foo: 1 };
 	child.self = child;
 	const o: any = { a: child, b: child };
 	identify(o);
-	assertEquals(Object.keys(o), ['a', 'b']);
+	assert.deepEqual(Object.keys(o), ['a', 'b']);
 	assert(o.a === child);
 	assert(o.b === child);
 	assert(child.self === child);
 });
 
-Deno.test('robustness :: hashing never pollutes Object.prototype', () => {
+test('robustness :: hashing never pollutes Object.prototype', () => {
 	identify(JSON.parse('{"__proto__":{"polluted":true}}'));
 	identify(JSON.parse('{"constructor":{"prototype":{"polluted":true}}}'));
-	assertEquals(({} as Record<string, unknown>).polluted, undefined);
+	assert.deepEqual(({} as Record<string, unknown>).polluted, undefined);
 });
 
 // ~> Known limitation
 
 // Cycle detection keys off object reference identity, so two structurally-different
 // cyclic shapes that share a referenced node can collapse to the same identity.
-Deno.test.ignore('limitation :: samey circular shapes should not match', () => {
+test.skip('limitation :: samey circular shapes should not match', () => {
 	const o1: any = { a: 1, b: 2 };
 	const o2: any = { a: 1, b: 2 };
 	o1.c = o1;
@@ -654,7 +684,7 @@ Deno.test.ignore('limitation :: samey circular shapes should not match', () => {
 	const a = identify(o1);
 	o2.c = o1;
 	const b = identify(o1);
-	assertNotEquals(a, b, `${a} != ${b}`);
+	assert.notDeepEqual(a, b, `${a} != ${b}`);
 });
 
 // ~> Property based tests
@@ -701,7 +731,7 @@ function reorder(v: any): any {
 	return o;
 }
 
-Deno.test('fuzz :: identify always returns a string and is idempotent', () => {
+test('fuzz :: identify always returns a string and is idempotent', () => {
 	fc.assert(
 		fc.property(jsonish, (v) => {
 			const hash = identify(v);
@@ -711,14 +741,14 @@ Deno.test('fuzz :: identify always returns a string and is idempotent', () => {
 	);
 });
 
-Deno.test('fuzz :: object & map key order is irrelevant', () => {
+test('fuzz :: object & map key order is irrelevant', () => {
 	fc.assert(
 		fc.property(jsonish, (v) => identify(v) === identify(reorder(v))),
 		{ numRuns: 1000 },
 	);
 });
 
-Deno.test('fuzz :: an object and the equivalent Map share an identity', () => {
+test('fuzz :: an object and the equivalent Map share an identity', () => {
 	const flatObj = fc.dictionary(keyArb, leafArb, { maxKeys: 6 });
 	fc.assert(
 		fc.property(flatObj, (o) => {
@@ -729,7 +759,7 @@ Deno.test('fuzz :: an object and the equivalent Map share an identity', () => {
 	);
 });
 
-Deno.test('fuzz :: reversing a distinct-element array changes the identity', () => {
+test('fuzz :: reversing a distinct-element array changes the identity', () => {
 	// Distinct integers have distinct identities, so a length >= 2 reversal differs.
 	const distinct = fc.uniqueArray(fc.integer(), { minLength: 2, maxLength: 8 });
 	fc.assert(
@@ -738,7 +768,7 @@ Deno.test('fuzz :: reversing a distinct-element array changes the identity', () 
 	);
 });
 
-Deno.test('fuzz :: adding a defined key changes the identity', () => {
+test('fuzz :: adding a defined key changes the identity', () => {
 	const flatObj = fc.dictionary(keyArb, leafArb, { maxKeys: 5 });
 	fc.assert(
 		fc.property(flatObj, fc.string({ minLength: 1 }), leafArb, (o, k, v) => {

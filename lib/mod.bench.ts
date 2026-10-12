@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-import-prefix
+import { bench } from '../scripts/bench.ts';
 
 const scenarios: Record<string, () => unknown> = {
 	simple() {
@@ -67,80 +67,85 @@ const candidates: Record<
 		run: (m, o) => m.identify(o),
 	},
 	'safe-stable-stringify': {
-		lib: () => import('npm:safe-stable-stringify@^2.5'),
+		lib: () => import('safe-stable-stringify'),
 		run: (m, o) => m.default(o),
 	},
 	ohash: {
-		lib: () => import('npm:ohash@^2.0'),
+		lib: () => import('ohash'),
 		run: (m, o) => m.serialize(o),
 	},
 	'object-hash': {
-		lib: () => import('npm:object-hash@^3.0'),
+		lib: () => import('object-hash'),
 		run: (m, o) => m.default(o, { algorithm: 'passthrough' }),
 	},
 	'hash-it †': {
-		lib: () => import('npm:hash-it@^7.0'),
+		lib: () => import('hash-it'),
 		run: (m, o) => m.hash(o),
 	},
 	'json-stable-stringify': {
-		lib: () => import('npm:json-stable-stringify@^1.3'),
+		lib: () => import('json-stable-stringify'),
 		run: (m, o) => m.default(o),
 	},
 	'fast-json-stable-stringify': {
-		lib: () => import('npm:fast-json-stable-stringify@^2.1'),
+		lib: () => import('fast-json-stable-stringify'),
 		run: (m, o) => m.default(o, { cycles: true }),
 	},
 	'tiny-stable-stringify': {
-		lib: () => import('npm:tiny-stable-stringify@^0.1'),
+		lib: () => import('tiny-stable-stringify'),
 		run: (m, o) => m.stringify(o),
 	},
 	'json-stringify-deterministic': {
-		lib: () => import('npm:json-stringify-deterministic@^1.0'),
+		lib: () => import('json-stringify-deterministic'),
 		run: (m, o) => m.default(o, { cycles: true }),
 	},
 	'json-sorted-stringify': {
-		lib: () => import('npm:json-sorted-stringify@^1.0'),
+		lib: () => import('json-sorted-stringify'),
 		run: (m, o) => m.default(o),
 	},
 	canonicalize: {
-		lib: () => import('npm:canonicalize@^3.0'),
+		lib: () => import('canonicalize'),
 		run: (m, o) => m.default(o),
 	},
-	'@tufjs/canonical-json': {
-		lib: () => import('npm:@tufjs/canonical-json@^2.0'),
-		run: (m, o) => m.canonicalize(o),
-	},
 	'swr/_internal/stableHash': {
-		lib: () => import('npm:swr@^2.4/_internal'),
+		lib: () => import('swr/_internal'),
 		run: (m, o) => m.stableHash(o),
+	},
+	'@tufjs/canonical-json': {
+		lib: () => import('@tufjs/canonical-json'),
+		run: (m, o) => m.canonicalize(o),
 	},
 };
 
-const mods: Record<string, any> = {};
-for (const [name, c] of Object.entries(candidates)) mods[name] = await c.lib();
-
 for (const [scenario, value] of Object.entries(scenarios)) {
-	for (const [name, c] of Object.entries(candidates)) {
-		// Validate up front: a throw (can't handle the shape) or non-deterministic
-		// output marks the bench ignored, so it's skipped instead of measured.
-		let valid = false;
+	for (const [name, candidate] of Object.entries(candidates)) {
+		const mod = await candidate.lib();
+		const baseline = name === 'object-identity';
+
+		const run = candidate.run.bind(0, mod);
+
 		try {
-			let o = value();
-			valid = c.run(mods[name], o) === c.run(mods[name], o);
-		} catch {
-			/* leaves valid false -> ignored */
+			const input = value();
+			if (run(input) !== run(input)) {
+				throw new Error('Non-deterministic output');
+			}
+		} catch (error) {
+			if (baseline) throw error;
+			const reason = error instanceof Error ? error.message : String(error);
+			console.error(`[skip] ${scenario} / ${name}: ${reason}`);
+			continue;
 		}
 
-		Deno.bench({
-			name,
+		await bench(name, {
 			group: scenario,
-			baseline: name === 'object-identity',
-			ignore: !valid,
-			fn: (ctx) => {
-				let o = value();
-				ctx.start();
-				let _ = c.run(mods[name], o);
-				ctx.end();
+			baseline,
+			fn: function* () {
+				yield {
+					// Computed parameters keep fresh-input allocation outside the timer.
+					0: value,
+					bench(input: unknown) {
+						return run(input);
+					},
+				};
 			},
 		});
 	}

@@ -9,6 +9,16 @@
 	"license": "MIT",
 	"author": "Marais Rossouw <me@marais.dev> (https://marais.io)",
 	"type": "module",
+	"packageManager": "pnpm@12.4.1",
+	"scripts": {
+		"build": "tsdown",
+		"test": "node --test",
+		"typecheck": "tsc --noEmit",
+		"bench": "node --expose-gc lib/mod.bench.ts",
+		"lint": "oxlint --deny-warnings",
+		"fmt": "oxfmt",
+		"check": "tsc --noEmit && oxlint --deny-warnings && oxfmt --check"
+	},
 	"keywords": [
 		"canonical",
 		"canonicalize",
@@ -26,15 +36,51 @@
 		"normalize"
 	],
 	"sideEffects": false,
-	"main": "./index.cjs",
-	"module": "./index.js",
-	"types": "./index.d.ts",
+	"files": [
+		"dist",
+		"license",
+		"readme.md"
+	],
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./index.d.ts",
-			"require": "./index.cjs",
-			"import": "./index.js"
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
 		},
 		"./package.json": "./package.json"
+	},
+	"devDependencies": {
+		"@marais/tsconfig": "0.0.5",
+		"@tufjs/canonical-json": "2.0.0",
+		"@types/node": "24.19.1",
+		"@types/object-hash": "3.0.6",
+		"@types/react": "19.3.0",
+		"canonicalize": "3.0.0",
+		"clean-publish": "7.1.0",
+		"fast-check": "4.10.2",
+		"fast-json-stable-stringify": "2.1.0",
+		"hash-it": "7.1.1",
+		"json-sorted-stringify": "1.0.2",
+		"json-stable-stringify": "1.3.0",
+		"json-stringify-deterministic": "1.0.16",
+		"mitata": "1.0.34",
+		"object-hash": "3.0.0",
+		"ohash": "2.0.12",
+		"oxfmt": "0.72.0",
+		"oxlint": "1.87.0",
+		"react": "19.3.0",
+		"safe-stable-stringify": "2.5.0",
+		"swr": "2.5.1",
+		"tiny-stable-stringify": "0.1.3",
+		"tsdown": "0.23.0",
+		"typescript": "7.0.2"
 	}
 }

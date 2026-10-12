@@ -1,0 +1,7 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"singleQuote": true,
+	"useTabs": true,
+	"sortPackageJson": false,
+	"ignorePatterns": ["pnpm-lock.yaml", "readme.md"]
+}
